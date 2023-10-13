@@ -12,6 +12,7 @@ namespace CinemaReservationSystemApi.Services
     public class BookingService
     {
         private readonly IMongoCollection<Booking> _bookings;
+        private readonly IMongoCollection<User> _users;
         private readonly ILogger<BookingService> _logger;
 
         public BookingService(IMongoDbSettings settings, ILogger<BookingService> logger)
@@ -19,6 +20,7 @@ namespace CinemaReservationSystemApi.Services
             var client = new MongoClient(settings.ConnectionString);
             var database = client.GetDatabase(settings.DatabaseName);
             _bookings = database.GetCollection<Booking>(settings.BookingsCollectionName);
+            _users = database.GetCollection<User>(settings.UsersCollectionName);
             _logger = logger;
         }
 
@@ -59,6 +61,12 @@ namespace CinemaReservationSystemApi.Services
             // Extract all booked seats from the filtered bookings
             return bookings.SelectMany(b => b.seatsBooked).ToList();
         }
+
+        public User GetUserById(string userId)
+        {
+            return _users.Find<User>(user => user.id == userId).FirstOrDefault();
+        }
+
 
 
         public void Remove(string id)

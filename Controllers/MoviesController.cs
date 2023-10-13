@@ -1,8 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 using CinemaReservationSystemApi.Services;
 using CinemaReservationSystemApi.Model;
 using Microsoft.Extensions.Logging;
@@ -24,13 +22,17 @@ namespace CinemaReservationSystemApi.Controllers
         }
 
         // GET: api/Movies
-        [HttpGet]
-        public ActionResult<List<Movie>> Get()
+        [HttpGet("status/{status?}")]
+        public ActionResult<List<Movie>> Get(string status = null)
         {
             try
             {
-                return _movieService.Get();
-                //return new List<Movie> { new Movie { movieName = "Test Movie" } }; // return a dummy movie
+                var movies = _movieService.Get(status);
+                if (movies == null || movies.Count == 0)
+                {
+                    return NotFound(new { Message = "No movies found" });
+                }
+                return movies;
             }
             catch (Exception ex)
             {
@@ -40,13 +42,14 @@ namespace CinemaReservationSystemApi.Controllers
         }
 
 
+
         // GET: api/Movies/{name}
-        [HttpGet("{name}", Name = "GetMovie")]
-        public ActionResult<List<Movie>> Get(string name)
+        [HttpGet("{name}")]
+        public ActionResult<List<Movie>> GetMovieByName(string name)
         {
             _logger.LogInformation($"API call received to retrieve movies containing name: {name}");
 
-            var movies = _movieService.Get(name);
+            var movies = _movieService.GetMovieByName(name);
 
             if (movies.Count > 0)
             {
@@ -60,7 +63,7 @@ namespace CinemaReservationSystemApi.Controllers
             }
         }
 
-        // GET: api/Movies/status/{status}
+        /*// GET: api/Movies/status/{status}
         [HttpGet("status/{status}", Name = "GetMoviesByStatus")]
         public ActionResult<List<Movie>> GetMoviesByStatus(string status)
         {
@@ -88,7 +91,7 @@ namespace CinemaReservationSystemApi.Controllers
                 _logger.LogWarning($"No movies found with status: {status}");
                 return NotFound(new { Message = $"No movies found with status: {status}" });
             }
-        }
+        }*/
 
         // POST: api/Movies
         [HttpPost]

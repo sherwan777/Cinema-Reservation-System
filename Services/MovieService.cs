@@ -24,12 +24,32 @@ namespace CinemaReservationSystemApi.Services
         }
 
         // GET: api/Movies
-        public List<Movie> Get()
+        public List<Movie> Get(string status = null)
         {
             try
             {
-                var movies = _movies.Find(movie => true).ToList();
-                _logger.LogInformation($"Retrieved {movies.Count} movies from the database.");
+                List<Movie> movies;
+
+                if (status.Equals("All" , StringComparison.OrdinalIgnoreCase))
+                {
+                    movies = _movies.Find(movie => true).ToList();
+                }
+                else
+                {
+                    // Convert the status to its actual value in the database
+                    if (status.Equals("Now Showing", StringComparison.OrdinalIgnoreCase))
+                    {
+                        status = "Now Showing";
+                    }
+                    else if (status.Equals("Upcoming", StringComparison.OrdinalIgnoreCase))
+                    {
+                        status = "Upcoming";
+                    }
+
+                    movies = _movies.Find(movie => movie.status == status).ToList();
+                }
+
+                _logger.LogInformation($"{movies.Count} movies retrieved from the database.");
                 return movies;
             }
             catch (Exception ex)
@@ -40,8 +60,9 @@ namespace CinemaReservationSystemApi.Services
         }
 
 
+
         // GET: api/Movies/{name}
-        public List<Movie> Get(string name)
+        public List<Movie> GetMovieByName(string name)
         {
             _logger.LogInformation($"Attempting to retrieve movies containing name: {name}");
 
@@ -61,7 +82,7 @@ namespace CinemaReservationSystemApi.Services
         }
 
         // GET: api/Movies/status
-        public List<Movie> GetMoviesByStatus(string status)
+        /*public List<Movie> GetMoviesByStatus(string status)
         {
             try
             {
@@ -74,7 +95,7 @@ namespace CinemaReservationSystemApi.Services
                 _logger.LogError(ex, $"An error occurred while trying to retrieve {status} movies from the database.");
                 throw;
             }
-        }
+        }*/
 
         // POST: api/Movies
         public Movie Create(Movie movie)

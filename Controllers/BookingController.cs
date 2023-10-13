@@ -94,6 +94,20 @@ namespace CinemaReservationSystemApi.Controllers
             }
         }
 
+        public string CreateEmailBody(Booking booking, User user)
+        {
+            return $"Dear User,\n\n" +
+                   $"Thank you for your booking.\n\n" +
+                   $"Movie Name: {booking.movieName}\n" +
+                   $"Date: {booking.movieDate}\n" +
+                   $"Time: {booking.movieTime}\n" +
+                   $"Total Price: {booking.TotalPrice}\n" +
+                   $"Seats: {string.Join(", ", booking.seatsBooked)}\n\n" +
+                   $"Please show this email to our representative at the cinema.\n\n" +
+                   $"Warm regards,\n" +
+                   $"IPT Team";
+        }
+
 
         // DELETE: api/Booking/{BookingId}
         [HttpDelete("{id}")]
