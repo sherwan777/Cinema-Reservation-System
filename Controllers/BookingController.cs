@@ -94,7 +94,7 @@ namespace CinemaReservationSystemApi.Controllers
             }
         }
 
-        public string CreateEmailBody(Booking booking, User user)
+        /*public string CreateEmailBody(Booking booking, User user)
         {
             return $"Dear User,\n\n" +
                    $"Thank you for your booking.\n\n" +
@@ -106,7 +106,7 @@ namespace CinemaReservationSystemApi.Controllers
                    $"Please show this email to our representative at the cinema.\n\n" +
                    $"Warm regards,\n" +
                    $"IPT Team";
-        }
+        }*/
 
 
         // DELETE: api/Booking/{BookingId}
