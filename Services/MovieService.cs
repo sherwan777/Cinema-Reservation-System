@@ -84,6 +84,14 @@ namespace CinemaReservationSystemApi.Services
         // POST: api/Movies
         public Movie Create(Movie movie)
         {
+            // Check if a movie with the same name already exists
+            var existingMovie = _movies.Find<Movie>(m => m.movieName == movie.movieName).FirstOrDefault();
+            if (existingMovie != null)
+            {
+                _logger.LogWarning($"Movie with name: {movie.movieName} already exists.");
+                throw new InvalidOperationException($"Movie with name: {movie.movieName} already exists.");
+            }
+
             try
             {
                 _movies.InsertOne(movie);
@@ -101,6 +109,7 @@ namespace CinemaReservationSystemApi.Services
                 throw;
             }
         }
+
 
         // GET: api/Movies/{name}
         public Movie GetExact(string name)
@@ -121,6 +130,7 @@ namespace CinemaReservationSystemApi.Services
             return movie;
         }
 
+        // PUT: api/Movies/{name}
         public void UpdateByMovieName(string movieName, Movie movieIn)
         {
             var result = _movies.ReplaceOne(movie => movie.movieName == movieName, movieIn);
