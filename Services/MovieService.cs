@@ -37,13 +37,13 @@ namespace CinemaReservationSystemApi.Services
                 else
                 {
                     // Convert the status to its actual value in the database
-                    if (status.Equals("Now Showing", StringComparison.OrdinalIgnoreCase))
+                    if (status.Equals("NowShowing", StringComparison.OrdinalIgnoreCase))
                     {
-                        status = "Now Showing";
+                        status = "nowshowing";
                     }
-                    else if (status.Equals("Upcoming", StringComparison.OrdinalIgnoreCase))
+                    else if (status.Equals("comingsoon", StringComparison.OrdinalIgnoreCase))
                     {
-                        status = "Upcoming";
+                        status = "comingsoon";
                     }
 
                     movies = _movies.Find(movie => movie.status == status).ToList();
@@ -80,22 +80,6 @@ namespace CinemaReservationSystemApi.Services
 
             return movies;
         }
-
-        // GET: api/Movies/status
-        /*public List<Movie> GetMoviesByStatus(string status)
-        {
-            try
-            {
-                var movies = _movies.Find(movie => movie.status == status).ToList();
-                _logger.LogInformation($"{movies.Count} {status} movies retrieved from the database.");
-                return movies;
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, $"An error occurred while trying to retrieve {status} movies from the database.");
-                throw;
-            }
-        }*/
 
         // POST: api/Movies
         public Movie Create(Movie movie)
@@ -136,6 +120,18 @@ namespace CinemaReservationSystemApi.Services
 
             return movie;
         }
+
+        public void UpdateByMovieName(string movieName, Movie movieIn)
+        {
+            var result = _movies.ReplaceOne(movie => movie.movieName == movieName, movieIn);
+            if (result.MatchedCount == 0)
+            {
+                _logger.LogWarning($"No movie found with name: {movieName}. Update operation aborted.");
+                throw new KeyNotFoundException($"No movie found with name: {movieName}");
+            }
+            _logger.LogInformation($"Movie with name: {movieName} successfully updated.");
+        }
+
 
         // DELETE: api/Movies/{name}
         public void Remove(string name)

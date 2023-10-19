@@ -63,35 +63,6 @@ namespace CinemaReservationSystemApi.Controllers
             }
         }
 
-        /*// GET: api/Movies/status/{status}
-        [HttpGet("status/{status}", Name = "GetMoviesByStatus")]
-        public ActionResult<List<Movie>> GetMoviesByStatus(string status)
-        {
-            _logger.LogInformation($"API call received to retrieve movies with status: {status}");
-
-            // Convert the status to its actual value in the database
-            if (status.Equals("NowShowing", StringComparison.OrdinalIgnoreCase))
-            {
-                status = "Now Showing";
-            }
-            else if (status.Equals("Upcoming", StringComparison.OrdinalIgnoreCase))
-            {
-                status = "Upcoming";
-            }
-
-            var movies = _movieService.GetMoviesByStatus(status);
-
-            if (movies.Count > 0)
-            {
-                _logger.LogInformation($"{movies.Count} movies found with status: {status}");
-                return movies;
-            }
-            else
-            {
-                _logger.LogWarning($"No movies found with status: {status}");
-                return NotFound(new { Message = $"No movies found with status: {status}" });
-            }
-        }*/
 
         // POST: api/Movies
         [HttpPost]
@@ -112,6 +83,30 @@ namespace CinemaReservationSystemApi.Controllers
 
             //return CreatedAtRoute("GetExactMovie", new { name = movie.Series_Title.ToString() }, movie);
             return StatusCode(201, movie);         
+        }
+
+        // PUT: api/Movies/{name}
+        [HttpPut("{name}")]
+        public IActionResult Update(string name, Movie movie)
+        {
+            var existingMovie = _movieService.GetExact(name);
+
+            if (existingMovie == null)
+            {
+                _logger.LogWarning($"Movie with name: {name} not found.");
+                return NotFound(new { Message = $"Movie with name: {name} not found." });
+            }
+
+            try
+            {
+                _movieService.UpdateByMovieName(name, movie);
+                return NoContent();  // Return 204 No Content status code
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"An error occurred while trying to update movie with name: {name}");
+                return StatusCode(500, new { Message = "An error occurred while trying to update the movie." });
+            }
         }
 
 

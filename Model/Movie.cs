@@ -8,13 +8,13 @@ namespace CinemaReservationSystemApi.Model
         public string movieName { get; set; }
         public string posterLink { get; set; }
         public string trailer { get; set; }
-        public string Certificate { get; set; }
-        public string Runtime { get; set; }
-        public string Genre { get; set; }
+        public string certificate { get; set; }
+        public string runtime { get; set; }
+        public List<string> Genre { get; set; }
         public string Overview { get; set; }
         public string status { get; set; }
-        public List<string> showDate { get; set; }
-        public List<string> showTime { get; set; }
-        public List<string> Cast { get; set; }
+        public Dictionary<string, List<string>> showTimings { get; set; }
+        public List<string> cast { get; set; }
     }
 }
+
