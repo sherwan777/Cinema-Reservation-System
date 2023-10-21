@@ -37,7 +37,7 @@ namespace CinemaReservationSystemApi.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "An error occurred while trying to retrieve movies.");
-                return StatusCode(500, new { Message = "An error occurred while trying to retrieve movies." });
+                return StatusCode(500, new { Message = $"An error occurred: {ex.Message}" });
             }
         }
 
@@ -68,33 +68,40 @@ namespace CinemaReservationSystemApi.Controllers
         [HttpPost]
         public ActionResult<Movie> Create(Movie movie)
         {
-            _logger.LogInformation($"Creating movie: {movie.movieName}");
-
-            var existingMovie = _movieService.GetExact(movie.movieName);
-            if (existingMovie != null)
+            if (!ModelState.IsValid)
             {
-                _logger.LogWarning($"Movie with name: {movie.movieName} already exists.");
-                return Conflict(new { Message = $"Movie with name: {movie.movieName} already exists." });
+                return BadRequest(ModelState);  // This will return detailed validation error messages
             }
 
-            _movieService.Create(movie);
-
-            _logger.LogInformation($"Created movie. Attempting to return result for movie: {movie.movieName}");
-
-            //return CreatedAtRoute("GetExactMovie", new { name = movie.Series_Title.ToString() }, movie);
-            return StatusCode(201, movie);         
+            try
+            {
+                _movieService.Create(movie);
+                _logger.LogInformation($"Created movie: {movie.movieName}");
+                return StatusCode(201, movie);
+            }
+            catch (InvalidOperationException ex)
+            {
+                // This is a user-friendly error, so we can return it as a Bad Request
+                _logger.LogWarning(ex.Message);
+                return BadRequest(new { Message = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"An error occurred while trying to create a movie.");
+                return StatusCode(500, new { Message = $"An error occurred: {ex.Message}" });
+            }
         }
+
+
 
         // PUT: api/Movies/{name}
         [HttpPut("{name}")]
         public IActionResult Update(string name, Movie movie)
         {
-            var existingMovie = _movieService.GetExact(name);
-
-            if (existingMovie == null)
+            if (!ModelState.IsValid)
             {
-                _logger.LogWarning($"Movie with name: {name} not found.");
-                return NotFound(new { Message = $"Movie with name: {name} not found." });
+                _logger.LogWarning($"Bad request payload received for updating movie: {name}.");
+                return BadRequest(ModelState);  // Return detailed validation error messages
             }
 
             try
@@ -105,7 +112,7 @@ namespace CinemaReservationSystemApi.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, $"An error occurred while trying to update movie with name: {name}");
-                return StatusCode(500, new { Message = "An error occurred while trying to update the movie." });
+                return StatusCode(500, new { Message = $"An error occurred: {ex.Message}" });
             }
         }
 
@@ -129,7 +136,7 @@ namespace CinemaReservationSystemApi.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, $"An error occurred while trying to delete movie with name: {name}");
-                return StatusCode(500, new { Message = "An error occurred while trying to delete the movie." });
+                return StatusCode(500, new { Message = $"An error occurred: {ex.Message}" });
             }
         }
 

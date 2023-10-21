@@ -77,20 +77,26 @@ namespace CinemaReservationSystemApi.Controllers
         [HttpPost]
         public ActionResult<Booking> Create(Booking booking)
         {
+            if (!ModelState.IsValid)
+            {
+                _logger.LogWarning("Bad request payload received for booking creation.");
+                return BadRequest(ModelState);  // Return detailed validation error messages
+            }
+
             try
             {
                 _bookingService.Create(booking);
                 return StatusCode(201, booking);
             }
-            catch (InvalidOperationException e)
+            catch (InvalidOperationException ex)
             {
-                _logger.LogWarning(e.Message);
-                return Conflict(new { Message = e.Message });
+                _logger.LogWarning(ex.Message);
+                return BadRequest(new { Message = ex.Message });  // Return user-friendly error as a bad request
             }
-            catch (Exception e)
+            catch (Exception ex)
             {
-                _logger.LogError(e, "An error occurred while trying to create a booking.");
-                return StatusCode(500, new { Message = "An error occurred while trying to create the booking." });
+                _logger.LogError(ex, "An error occurred while trying to create a booking.");
+                return StatusCode(500, new { Message = $"An error occurred: {ex.Message}" });
             }
         }
 
@@ -120,15 +126,21 @@ namespace CinemaReservationSystemApi.Controllers
             if (booking == null)
             {
                 _logger.LogWarning($"No booking found with id: {id}");
-                return NotFound();
+                return NotFound(new { Message = $"Booking with id: {id} not found" });
             }
 
-            _bookingService.Remove(booking.Id);
-            _logger.LogInformation($"Booking with id: {id} deleted successfully");
-
-            return NoContent();
+            try
+            {
+                _bookingService.Remove(booking.Id);
+                _logger.LogInformation($"Booking with id: {id} deleted successfully");
+                return NoContent();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"An error occurred while trying to delete booking with id: {id}");
+                return StatusCode(500, new { Message = $"An error occurred: {ex.Message}" });
+            }
         }
-
     }
 }
 
