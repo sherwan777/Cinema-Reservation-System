@@ -29,11 +29,22 @@ namespace CinemaReservationSystemApi
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
+            services.AddCors(options =>
+            {
+                options.AddPolicy("AllowSpecific",
+                    builder =>
+                    {
+                        builder
+                        .WithOrigins("http://localhost:3000")  // Only allow requests from this origin
+                        .WithMethods("GET", "POST" , "PUT" , "DELETE")  // Only allow these methods
+                        .WithHeaders("Content-Type", "Authorization");  // Only allow these headers
+                    });
+            });
+
             services.AddLogging(config =>
             {
                 config.AddDebug();
                 config.AddConsole();
-                // Add other loggers as needed
             });
 
             services.AddControllers();
@@ -65,6 +76,8 @@ namespace CinemaReservationSystemApi
             }
 
             app.UseHttpsRedirection();
+
+            app.UseCors("AllowSpecific");
 
             app.UseRouting();
 
