@@ -52,17 +52,20 @@ namespace CinemaReservationSystemApi.Controllers
         }
 
         [HttpGet("bookedSeats")]
-        public ActionResult<List<string>> GetBookedSeats(string movieName, string movieDate, string movieTime)
+        public ActionResult<object> GetBookedSeats(string movieName, string movieDate, string movieTime)
         {
             try
             {
                 var bookedSeats = _bookingService.GetBookedSeats(movieName, movieDate, movieTime);
-                if (bookedSeats == null || bookedSeats.Count == 0)
+                int seatCount = bookedSeats?.Count ?? 0;
+
+                if (seatCount == 0)
                 {
                     _logger.LogInformation($"No bookings found for {movieName} on {movieDate} at {movieTime}");
-                    return NotFound();
+                    return Ok(new { bookedSeats = new List<string>(), seatCount });
                 }
-                return bookedSeats;
+
+                return Ok(new { bookedSeats, seatCount });
             }
             catch (Exception e)
             {
@@ -70,6 +73,7 @@ namespace CinemaReservationSystemApi.Controllers
                 return StatusCode(500, new { Message = "An error occurred while trying to retrieve booked seats." });
             }
         }
+
 
 
 
