@@ -57,15 +57,26 @@ namespace CinemaReservationSystemApi.Controllers
             try
             {
                 var bookedSeats = _bookingService.GetBookedSeats(movieName, movieDate, movieTime);
-                int seatCount = bookedSeats?.Count ?? 0;
 
-                if (seatCount == 0)
+                // Categorizing the booked seats based on their types
+                int bookedStandardSeats = bookedSeats.Count(s => s.StartsWith("Standard"));
+                int bookedSilverSeats = bookedSeats.Count(s => s.StartsWith("Silver"));
+                int bookedGoldSeats = bookedSeats.Count(s => s.StartsWith("Gold"));
+
+                int totalStandardSeats = 120;
+                int totalSilverSeats = 60;
+                int totalGoldSeats = 40;
+
+                return Ok(new
                 {
-                    _logger.LogInformation($"No bookings found for {movieName} on {movieDate} at {movieTime}");
-                    return Ok(new { bookedSeats = new List<string>(), seatCount });
-                }
-
-                return Ok(new { bookedSeats, seatCount });
+                    bookedSeats,
+                    remainingSeats = new
+                    {
+                        standard = totalStandardSeats - bookedStandardSeats,
+                        silver = totalSilverSeats - bookedSilverSeats,
+                        gold = totalGoldSeats - bookedGoldSeats
+                    }
+                });
             }
             catch (Exception e)
             {
@@ -73,8 +84,6 @@ namespace CinemaReservationSystemApi.Controllers
                 return StatusCode(500, new { Message = "An error occurred while trying to retrieve booked seats." });
             }
         }
-
-
 
 
         // POST: api/Booking
