@@ -3,7 +3,6 @@ using System;
 using System.Collections.Generic;
 using CinemaReservationSystemApi.Services;
 using CinemaReservationSystemApi.Model;
-using Microsoft.Extensions.Logging;
 
 namespace CinemaReservationSystemApi.Controllers
 {
@@ -28,11 +27,7 @@ namespace CinemaReservationSystemApi.Controllers
             try
             {
                 var movies = _movieService.Get(status);
-                if (movies == null || movies.Count == 0)
-                {
-                    return NotFound(new { Message = "No movies found" });
-                }
-                return movies;
+                return movies ?? new List<Movie>();  // Return empty list if movies is null
             }
             catch (Exception ex)
             {
@@ -54,15 +49,14 @@ namespace CinemaReservationSystemApi.Controllers
             if (movies.Count > 0)
             {
                 _logger.LogInformation($"{movies.Count} movies found containing name: {name}");
-                return movies;
             }
             else
             {
                 _logger.LogWarning($"No movies found containing name: {name}");
-                return NotFound();
             }
-        }
 
+            return movies ?? new List<Movie>();
+        }
 
         // POST: api/Movies
         [HttpPost]

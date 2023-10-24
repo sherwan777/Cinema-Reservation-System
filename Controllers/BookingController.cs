@@ -3,8 +3,6 @@ using CinemaReservationSystemApi.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using System;
-using System.Collections.Generic;
-using CinemaReservationSystemApi.Controllers;
 
 namespace CinemaReservationSystemApi.Controllers
 {
@@ -26,15 +24,8 @@ namespace CinemaReservationSystemApi.Controllers
         public ActionResult<List<Booking>> GetAllBookings()
         {
             var bookings = _bookingService.GetAllBookings();
-
-            if (bookings == null || bookings.Count == 0)
-            {
-                return NotFound(new { Message = "No bookings found" });
-            }
-
-            return bookings;
+            return bookings ?? new List<Booking>();  // Return empty list if bookings is null
         }
-
 
         // GET: api/Booking/{Userid}
         [HttpGet("{userId}", Name = "GetBookingsByUserId")]
@@ -45,11 +36,11 @@ namespace CinemaReservationSystemApi.Controllers
             if (bookings == null || bookings.Count == 0)
             {
                 _logger.LogInformation($"No bookings found for user id: {userId}");
-                return NotFound();
             }
 
-            return bookings;
+            return bookings ?? new List<Booking>();  // Return empty list if bookings is null
         }
+
 
         [HttpGet("bookedSeats")]
         public ActionResult<object> GetBookedSeats(string movieName, string movieDate, string movieTime)
