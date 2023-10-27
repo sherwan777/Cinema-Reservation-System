@@ -1,6 +1,7 @@
 ﻿using CinemaReservationSystemApi.Configurations;
 using CinemaReservationSystemApi.Model;
 using Microsoft.Extensions.Logging;
+using MongoDB.Bson;
 using MongoDB.Driver;
 using System;
 using System.Collections.Generic;
@@ -49,8 +50,19 @@ namespace CinemaReservationSystemApi.Services
 
 
 
-        public Booking GetBookingById(string id) =>
-            _bookings.Find<Booking>(booking => booking.Id == id).FirstOrDefault();
+        public Booking GetBookingById(string id)
+        {
+            try
+            {
+                var objectId = ObjectId.Parse(id);  // Convert string ID to ObjectId
+                return _bookings.Find<Booking>(booking => booking.Id == objectId).FirstOrDefault();
+            }
+            catch (FormatException)
+            {
+                _logger.LogWarning($"Invalid format for ObjectId: {id}");
+                return null;
+            }
+        }
 
         public List<string> GetBookedSeats(string movieName, string movieDate, string movieTime)
         {
@@ -62,14 +74,10 @@ namespace CinemaReservationSystemApi.Services
             return bookings.SelectMany(b => b.seatsBooked).ToList();
         }
 
-        public User GetUserById(string userId)
-        {
-            return _users.Find<User>(user => user.id == userId).FirstOrDefault();
-        }
+        public Booking GetBookingById(ObjectId id) =>
+     _bookings.Find<Booking>(booking => booking.Id == id).FirstOrDefault();
 
-
-
-        public void Remove(string id)
+        public void Remove(ObjectId id)
         {
             _logger.LogInformation($"Removing booking with id: {id}");
 
@@ -84,7 +92,6 @@ namespace CinemaReservationSystemApi.Services
                 _logger.LogInformation($"Booking with id: {id} successfully deleted");
             }
         }
-
 
     }
 }

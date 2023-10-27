@@ -1,10 +1,11 @@
 ﻿using CinemaReservationSystemApi.Model;
 using CinemaReservationSystemApi.Services;
 using Microsoft.AspNetCore.Mvc;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+using System.Security.Claims;
+using System.Text;
+using System.IdentityModel.Tokens.Jwt;
+using Microsoft.IdentityModel.Tokens;
+
 
 namespace CinemaReservationSystemApi.Controllers
 {
@@ -13,7 +14,8 @@ namespace CinemaReservationSystemApi.Controllers
     public class UsersController : ControllerBase
     {
         private readonly UserService _userService;
-
+        private readonly string secretKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJKaWduZXNoIFRyaXZlZGkiLCJlbWFpbCI6InRlc3QuYnRlc3RAZ21haWwuY29tIiwiRGF0ZU9mSm9pbmciOiIwMDAxLTAxLTAxIiwianRpIjoiYzJkNTZjNzQtZTc3Yy00ZmUxLTgyYzAtMzlhYjhmNzFmYzUzIiwiZXhwIjoxNTMyMzU2NjY5LCJpc3MiOiJUZXN0LmNvbSIsImF1ZCI6IlRlc3QuY29tIn0.8hwQ3H9V8mdNYrFZSjbCpWSyR1CNyDYHcGf6GqqCGnY";
+       
         public UsersController(UserService userService)
         {
             _userService = userService;
@@ -37,13 +39,55 @@ namespace CinemaReservationSystemApi.Controllers
             return user;
         }
 
+        [HttpPost("login")]
+        public ActionResult<User> Login([FromBody] LoginRequest request)
+        {
+            var user = _userService.GetUserByEmailAndPassword(request.email, request.password);
+
+            if (user == null)
+            {
+                return Unauthorized(new { Message = "Invalid email or password" });
+            }
+
+            // Generate JWT token
+            var tokenHandler = new JwtSecurityTokenHandler();
+            var key = Encoding.ASCII.GetBytes(secretKey);
+            var tokenDescriptor = new SecurityTokenDescriptor
+            {
+                Subject = new ClaimsIdentity(new Claim[]
+                {
+                    new Claim("userId", user.id.ToString()), // Make sure to set the userId claim
+                    new Claim(ClaimTypes.Role, user.isAdmin ? "admin" : "user") // Set the role based on isAdmin flag
+                }),
+                Expires = DateTime.UtcNow.AddDays(1), // Token expiration time
+                SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature)
+            };
+            var token = tokenHandler.CreateToken(tokenDescriptor);
+            var tokenString = tokenHandler.WriteToken(token);
+
+            // Set the token in the cookie
+            HttpContext.Response.Cookies.Append("token", tokenString, new CookieOptions { HttpOnly = true, SameSite = SameSiteMode.Strict });
+
+            // Return token and user role
+            return Ok(new
+            {
+                Message = "Login successful",
+                Token = tokenString,
+                Role = user.isAdmin ? "admin" : "user",
+                UserId = user.id
+            });
+        }
+
+
+
+
         // POST: api/Users
         [HttpPost]
         public ActionResult<User> Create(User user)
         {
             if (!ModelState.IsValid)
             {
-                return BadRequest(ModelState);  // Return detailed validation error messages
+                return BadRequest(ModelState);
             }
 
             var existingUser = _userService.GetUserById(user.id);
@@ -53,9 +97,30 @@ namespace CinemaReservationSystemApi.Controllers
                 return Conflict(new { Message = $"User with ID: {user.id} already exists." });
             }
 
-            _userService.Create(user);
-            return CreatedAtRoute("GetUser", new { id = user.id.ToString() }, user);
+            var createdUser = _userService.Create(user);
+
+            // Generate JWT token for the new user
+            var tokenHandler = new JwtSecurityTokenHandler();
+            var key = Encoding.ASCII.GetBytes(secretKey);
+            var tokenDescriptor = new SecurityTokenDescriptor
+            {
+                Subject = new ClaimsIdentity(new Claim[]
+                {
+            new Claim(ClaimTypes.Name, createdUser.id.ToString()),
+            new Claim(ClaimTypes.Role, createdUser.isAdmin ? "admin" : "user")
+                }),
+                Expires = DateTime.UtcNow.AddDays(1),
+                SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature)
+            };
+            var token = tokenHandler.CreateToken(tokenDescriptor);
+            var tokenString = tokenHandler.WriteToken(token);
+
+            // Save token to cookies
+            Response.Cookies.Append("jwt", tokenString, new CookieOptions { HttpOnly = true, Expires = DateTime.UtcNow.AddDays(1) });
+
+            return CreatedAtRoute("GetUser", new { id = createdUser.id.ToString() }, new { createdUser, Token = tokenString });
         }
+
 
         // DELETE: api/Users/{id}
         [HttpDelete("{id}")]
@@ -71,7 +136,9 @@ namespace CinemaReservationSystemApi.Controllers
             _userService.Remove(user.id);
             return NoContent();
         }
-    }
 
+ 
+
+    }
 
 }

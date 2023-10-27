@@ -2,9 +2,7 @@
 using CinemaReservationSystemApi.Model;
 using MongoDB.Driver;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+using BCrypt.Net;
 
 namespace CinemaReservationSystemApi.Services
 {
@@ -23,8 +21,19 @@ namespace CinemaReservationSystemApi.Services
 
         public User GetUserById(string id) => _users.Find<User>(user => user.id == id).FirstOrDefault();
 
+        public User GetUserByEmailAndPassword(string email, string password)
+        {
+            var user = _users.Find<User>(user => user.email == email).FirstOrDefault();
+            if (user != null && BCrypt.Net.BCrypt.Verify(password, user.password))
+            {
+                return user;
+            }
+            return null;
+        }
+
         public User Create(User user)
         {
+            user.password = BCrypt.Net.BCrypt.HashPassword(user.password);
             _users.InsertOne(user);
             return user;
         }

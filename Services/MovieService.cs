@@ -24,7 +24,7 @@ namespace CinemaReservationSystemApi.Services
         }
 
         // GET: api/Movies
-        public List<Movie> Get(string status = null)
+        public List<Movie> Get(string status)
         {
             try
             {

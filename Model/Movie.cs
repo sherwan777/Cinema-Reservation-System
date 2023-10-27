@@ -13,6 +13,8 @@ namespace CinemaReservationSystemApi.Model
         public List<string> Genre { get; set; }
         public string Overview { get; set; }
         public string status { get; set; }
+        public string Language { get; set; }
+        public string ReleaseDate {  get; set; }
         public Dictionary<string, List<string>> showTimings { get; set; }
         public List<string> cast { get; set; }
     }

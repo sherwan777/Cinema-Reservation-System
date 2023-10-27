@@ -1,19 +1,12 @@
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.HttpsPolicy;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
 using Microsoft.OpenApi.Models;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 using CinemaReservationSystemApi.Configurations;
 using CinemaReservationSystemApi.Services;
+using Microsoft.Extensions.Options;
+
 
 namespace CinemaReservationSystemApi
 {
@@ -47,16 +40,24 @@ namespace CinemaReservationSystemApi
                 config.AddConsole();
             });
 
+            // Configure SMTP settings
+            services.Configure<SmtpSettings>(Configuration.GetSection("SmtpSettings"));
+
+            // Register EmailService
+            services.AddSingleton<EmailService>();
+
+            services.Configure<MongoDbSettings>(
+               Configuration.GetSection(nameof(MongoDbSettings)));
+
+            services.AddSingleton<IMongoDbSettings>(sp =>
+                sp.GetRequiredService<IOptions<MongoDbSettings>>().Value);
+
             services.AddControllers();
             services.AddSwaggerGen(c =>
             {
                 c.SwaggerDoc("v1", new OpenApiInfo { Title = "CinemaReservationSystemApi", Version = "v1" });
             });
-            services.Configure<MongoDbSettings>(
-                Configuration.GetSection(nameof(MongoDbSettings)));
 
-            services.AddSingleton<IMongoDbSettings>(sp =>
-                sp.GetRequiredService<IOptions<MongoDbSettings>>().Value);
 
             services.AddSingleton<MovieService>();
             services.AddSingleton<UserService>();
@@ -80,6 +81,8 @@ namespace CinemaReservationSystemApi
             app.UseCors("AllowSpecific");
 
             app.UseRouting();
+
+            app.UseMiddleware<JwtMiddleware>();
 
             app.UseAuthorization();
 

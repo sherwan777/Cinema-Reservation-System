@@ -2,6 +2,7 @@
 using CinemaReservationSystemApi.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
+using MongoDB.Bson;
 using System;
 
 namespace CinemaReservationSystemApi.Controllers
@@ -12,10 +13,12 @@ namespace CinemaReservationSystemApi.Controllers
     {
         private readonly BookingService _bookingService;
         private readonly ILogger<BookingController> _logger;
+        private readonly EmailService _emailService;
 
-        public BookingController(BookingService bookingService, ILogger<BookingController> logger)
+        public BookingController(BookingService bookingService, EmailService emailService, ILogger<BookingController> logger)
         {
             _bookingService = bookingService;
+            _emailService = emailService;
             _logger = logger;
         }
 
@@ -84,18 +87,39 @@ namespace CinemaReservationSystemApi.Controllers
             if (!ModelState.IsValid)
             {
                 _logger.LogWarning("Bad request payload received for booking creation.");
-                return BadRequest(ModelState);  // Return detailed validation error messages
+                return BadRequest(ModelState);
             }
 
             try
             {
-                _bookingService.Create(booking);
-                return StatusCode(201, booking);
-            }
-            catch (InvalidOperationException ex)
-            {
-                _logger.LogWarning(ex.Message);
-                return BadRequest(new { Message = ex.Message });  // Return user-friendly error as a bad request
+                // Extract user ID from HttpContext.Items
+                var userId = HttpContext.Items["UserId"]?.ToString();
+
+                
+                if (userId == null)
+                {
+                    _logger.LogWarning("User ID is missing in the request context.");
+                    return Unauthorized(new { Message = "User ID is required." });
+                }
+                // Add the userID to the booking
+                booking.userId = userId;
+
+                var createdBooking = _bookingService.Create(booking);
+
+                // Fetch user email from user ID
+                var userEmail = booking.userId;
+                if (!string.IsNullOrWhiteSpace(userEmail))
+                {
+                    var emailBody = CreateEmailBody(createdBooking, userEmail);
+                    _emailService.SendEmail(userEmail, "Your Ticket Confirmation", emailBody);
+                    _logger.LogInformation("Attempted to send email for booking {BookingId}", createdBooking.Id);
+                }
+                else
+                {
+                    _logger.LogWarning("User email is missing for booking {BookingId}", createdBooking.Id);
+                }
+
+                return StatusCode(201, createdBooking);
             }
             catch (Exception ex)
             {
@@ -104,7 +128,7 @@ namespace CinemaReservationSystemApi.Controllers
             }
         }
 
-        /*public string CreateEmailBody(Booking booking, User user)
+        private string CreateEmailBody(Booking booking, string userEmail)
         {
             return $"Dear User,\n\n" +
                    $"Thank you for your booking.\n\n" +
@@ -115,29 +139,25 @@ namespace CinemaReservationSystemApi.Controllers
                    $"Seats: {string.Join(", ", booking.seatsBooked)}\n\n" +
                    $"Please show this email to our representative at the cinema.\n\n" +
                    $"Warm regards,\n" +
-                   $"IPT Team";
-        }*/
+                   $"TicketFlix Team";
+        }
 
 
         // DELETE: api/Booking/{BookingId}
         [HttpDelete("{id}")]
         public IActionResult Delete(string id)
         {
-            _logger.LogInformation($"Attempt to delete booking with id: {id}");
-
-            var booking = _bookingService.GetBookingById(id);
-
-            if (booking == null)
-            {
-                _logger.LogWarning($"No booking found with id: {id}");
-                return NotFound(new { Message = $"Booking with id: {id} not found" });
-            }
-
             try
             {
-                _bookingService.Remove(booking.Id);
+                var objectId = ObjectId.Parse(id);  // Convert string ID to ObjectId
+                _bookingService.Remove(objectId);
                 _logger.LogInformation($"Booking with id: {id} deleted successfully");
                 return NoContent();
+            }
+            catch (FormatException)
+            {
+                _logger.LogWarning($"Invalid format for ObjectId: {id}");
+                return BadRequest(new { Message = $"Invalid format for ObjectId: {id}" });
             }
             catch (Exception ex)
             {
@@ -145,6 +165,7 @@ namespace CinemaReservationSystemApi.Controllers
                 return StatusCode(500, new { Message = $"An error occurred: {ex.Message}" });
             }
         }
+
     }
 }
 

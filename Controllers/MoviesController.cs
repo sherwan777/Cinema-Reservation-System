@@ -22,7 +22,7 @@ namespace CinemaReservationSystemApi.Controllers
 
         // GET: api/Movies
         [HttpGet("status/{status?}")]
-        public ActionResult<List<Movie>> Get(string status = null)
+        public ActionResult<List<Movie>> Get(string status)
         {
             try
             {
