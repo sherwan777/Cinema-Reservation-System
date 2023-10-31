@@ -84,6 +84,8 @@ namespace CinemaReservationSystemApi.Controllers
         [HttpPost]
         public ActionResult<Booking> Create(Booking booking)
         {
+            _logger.LogInformation("Booking creation endpoint called.");
+
             if (!ModelState.IsValid)
             {
                 _logger.LogWarning("Bad request payload received for booking creation.");
@@ -92,22 +94,27 @@ namespace CinemaReservationSystemApi.Controllers
 
             try
             {
-                // Extract user ID from HttpContext.Items
-                var userId = HttpContext.Items["UserId"]?.ToString();
+                _logger.LogInformation("Attempting to extract user ID from HttpContext.");
 
-                
-                if (userId == null)
+                // Extract user email from HttpContext.Items
+                var userEmail = HttpContext.Items["UserEmail"]?.ToString();
+                _logger.LogInformation($"User email extracted: {userEmail}");
+
+                if (string.IsNullOrWhiteSpace(userEmail))
                 {
-                    _logger.LogWarning("User ID is missing in the request context.");
-                    return Unauthorized(new { Message = "User ID is required." });
+                    _logger.LogWarning("User email is missing in the request context.");
+                    return Unauthorized(new { Message = "User email is required." });
                 }
+
                 // Add the userID to the booking
-                booking.userId = userId;
+                booking.userId = userEmail;
+                _logger.LogInformation($"User ID set in booking: {userEmail}");
 
                 var createdBooking = _bookingService.Create(booking);
+                _logger.LogInformation($"Booking created successfully. Booking ID: {createdBooking.Id}");
 
-                // Fetch user email from user ID
-                var userEmail = booking.userId;
+                
+                //var userEmail = booking.userId;
                 if (!string.IsNullOrWhiteSpace(userEmail))
                 {
                     var emailBody = CreateEmailBody(createdBooking, userEmail);
@@ -127,6 +134,7 @@ namespace CinemaReservationSystemApi.Controllers
                 return StatusCode(500, new { Message = $"An error occurred: {ex.Message}" });
             }
         }
+
 
         private string CreateEmailBody(Booking booking, string userEmail)
         {

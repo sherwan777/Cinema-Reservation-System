@@ -28,7 +28,8 @@ namespace CinemaReservationSystemApi
                     builder =>
                     {
                         builder
-                        .WithOrigins("http://localhost:3000")  // Only allow requests from this origin
+                        .WithOrigins("http://localhost:3000" , "https://localhost:44305")  // Only allow requests from this origin
+                        .AllowCredentials()
                         .WithMethods("GET", "POST" , "PUT" , "DELETE")  // Only allow these methods
                         .WithHeaders("Content-Type", "Authorization");  // Only allow these headers
                     });
@@ -40,17 +41,12 @@ namespace CinemaReservationSystemApi
                 config.AddConsole();
             });
 
-            // Configure SMTP settings
-            services.Configure<SmtpSettings>(Configuration.GetSection("SmtpSettings"));
-
-            // Register EmailService
-            services.AddSingleton<EmailService>();
-
             services.Configure<MongoDbSettings>(
                Configuration.GetSection(nameof(MongoDbSettings)));
 
             services.AddSingleton<IMongoDbSettings>(sp =>
                 sp.GetRequiredService<IOptions<MongoDbSettings>>().Value);
+
 
             services.AddControllers();
             services.AddSwaggerGen(c =>
@@ -58,7 +54,7 @@ namespace CinemaReservationSystemApi
                 c.SwaggerDoc("v1", new OpenApiInfo { Title = "CinemaReservationSystemApi", Version = "v1" });
             });
 
-
+            services.AddSingleton<EmailService>();
             services.AddSingleton<MovieService>();
             services.AddSingleton<UserService>();
             services.AddSingleton<BookingService>();

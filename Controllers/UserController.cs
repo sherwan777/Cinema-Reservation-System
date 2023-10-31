@@ -56,19 +56,25 @@ namespace CinemaReservationSystemApi.Controllers
             {
                 Subject = new ClaimsIdentity(new Claim[]
                 {
-                    new Claim("userId", user.id.ToString()), // Make sure to set the userId claim
-                    new Claim(ClaimTypes.Role, user.isAdmin ? "admin" : "user") // Set the role based on isAdmin flag
+                    new Claim(ClaimTypes.Name, user.email.ToString()),
+                    new Claim(ClaimTypes.Role, user.isAdmin ? "admin" : "user")
                 }),
-                Expires = DateTime.UtcNow.AddDays(1), // Token expiration time
+                Expires = DateTime.UtcNow.AddDays(1),
                 SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature)
             };
             var token = tokenHandler.CreateToken(tokenDescriptor);
             var tokenString = tokenHandler.WriteToken(token);
 
             // Set the token in the cookie
-            HttpContext.Response.Cookies.Append("token", tokenString, new CookieOptions { HttpOnly = true, SameSite = SameSiteMode.Strict });
+            var cookieOptions = new CookieOptions
+            {
+                HttpOnly = true,
+                SameSite = SameSiteMode.None,
+                Secure = true,
+                Path = "/"
+            };
+            HttpContext.Response.Cookies.Append("token", tokenString, cookieOptions);
 
-            // Return token and user role
             return Ok(new
             {
                 Message = "Login successful",
@@ -77,6 +83,7 @@ namespace CinemaReservationSystemApi.Controllers
                 UserId = user.id
             });
         }
+
 
 
 
@@ -106,8 +113,9 @@ namespace CinemaReservationSystemApi.Controllers
             {
                 Subject = new ClaimsIdentity(new Claim[]
                 {
-            new Claim(ClaimTypes.Name, createdUser.id.ToString()),
-            new Claim(ClaimTypes.Role, createdUser.isAdmin ? "admin" : "user")
+                    //new Claim(ClaimTypes.Name, createdUser.id.ToString()),
+                    new Claim(ClaimTypes.Name, createdUser.email.ToString()),
+                    new Claim(ClaimTypes.Role, createdUser.isAdmin ? "admin" : "user")
                 }),
                 Expires = DateTime.UtcNow.AddDays(1),
                 SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature)
