@@ -10,20 +10,23 @@
     <PackageReference Include="BCrypt.Net-Next" Version="4.0.3" />
     <PackageReference Include="Google.Apis" Version="1.63.0" />
     <PackageReference Include="Google.Apis.Auth" Version="1.63.0" />
-    <PackageReference Include="Google.Apis.Gmail.v1" Version="1.63.0.3217" />
+    <PackageReference Include="Google.Apis.Gmail.v1" Version="1.63.0.3231" />
     <PackageReference Include="Localtunnel" Version="1.0.5" />
     <PackageReference Include="MailKit" Version="4.2.0" />
     <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="7.0.11" />
     <PackageReference Include="MimeKit" Version="4.2.0" />
     <PackageReference Include="MongoDB.Driver" Version="2.22.0" />
+    <PackageReference Include="Net.Codecrete.QrCodeGenerator" Version="2.0.4" />
+    <PackageReference Include="QRCoder" Version="1.4.1" />
     <PackageReference Include="SendGrid" Version="9.28.1" />
-    <PackageReference Include="Serilog" Version="3.0.1" />
+    <PackageReference Include="Serilog" Version="3.1.1" />
     <PackageReference Include="Serilog.Extensions.Hosting" Version="7.0.0" />
     <PackageReference Include="Serilog.Extensions.Logging" Version="7.0.0" />
     <PackageReference Include="Serilog.Settings.Configuration" Version="7.0.1" />
     <PackageReference Include="Serilog.Sinks.Console" Version="4.1.0" />
     <PackageReference Include="Serilog.Sinks.File" Version="5.0.0" />
     <PackageReference Include="Swashbuckle.AspNetCore" Version="6.5.0" />
+    <PackageReference Include="System.Drawing.Common" Version="7.0.0" />
     <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="7.0.3" />
   </ItemGroup>
 

@@ -1,12 +1,14 @@
 ﻿using CinemaReservationSystemApi.Configurations;
 using CinemaReservationSystemApi.Model;
+using System.Drawing;
+using System.Drawing.Imaging;
+using System.IO;
 using Microsoft.Extensions.Logging;
 using MongoDB.Bson;
 using MongoDB.Driver;
+using System.IO;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+using QRCoder;
 
 namespace CinemaReservationSystemApi.Services
 {
@@ -55,7 +57,7 @@ namespace CinemaReservationSystemApi.Services
             try
             {
                 var objectId = ObjectId.Parse(id);  // Convert string ID to ObjectId
-                return _bookings.Find<Booking>(booking => booking.Id == objectId).FirstOrDefault();
+                return _bookings.Find(booking => booking.Id == objectId).FirstOrDefault();
             }
             catch (FormatException)
             {
@@ -76,6 +78,31 @@ namespace CinemaReservationSystemApi.Services
 
         public Booking GetBookingById(ObjectId id) =>
      _bookings.Find<Booking>(booking => booking.Id == id).FirstOrDefault();
+
+        public string GenerateQRCodeData(Booking booking)
+        {
+            var qrContent = CreateQRContent(booking); // Create the content for the QR code
+            var qrGenerator = new QRCodeGenerator();
+            var qrCodeData = qrGenerator.CreateQrCode(qrContent, QRCodeGenerator.ECCLevel.Q);
+            using (var qrCode = new QRCode(qrCodeData))
+            {
+                using (var qrBitmap = qrCode.GetGraphic(20))
+                {
+                    using (var ms = new MemoryStream())
+                    {
+                        qrBitmap.Save(ms, ImageFormat.Png);
+                        return Convert.ToBase64String(ms.ToArray());
+                    }
+                }
+            }
+        }
+
+        private string CreateQRContent(Booking booking)
+        {
+            return booking.Id.ToString();
+        }
+
+
 
         public void Remove(ObjectId id)
         {

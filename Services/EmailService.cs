@@ -16,12 +16,12 @@ public class EmailService
         _logger = logger;
     }
 
-    public void SendEmail(string toEmail, string subject, string body)
+    public void SendEmail(string toEmail, string subject, string body, byte[] attachment = null, string attachmentName = "")
     {
         try
         {
             var service = GetGmailService();
-            var emailMessage = CreateEmailMessage(toEmail, subject, body);
+            var emailMessage = CreateEmailMessage(toEmail, subject, body, attachment, attachmentName);
             var request = service.Users.Messages.Send(emailMessage, "me");
             request.Execute();
             _logger.LogInformation("Email sent successfully to {Email}", toEmail);
@@ -41,7 +41,7 @@ public class EmailService
         {
             string credPath = "token.json";
             credential = GoogleWebAuthorizationBroker.AuthorizeAsync(
-                GoogleClientSecrets.Load(stream).Secrets,
+                GoogleClientSecrets.FromStream(stream).Secrets,
                 Scopes,
                 "user",
                 CancellationToken.None,
@@ -56,25 +56,26 @@ public class EmailService
         });
     }
 
-    private Message CreateEmailMessage(string toEmail, string subject, string body)
+    private Message CreateEmailMessage(string toEmail, string subject, string body, byte[] attachment = null, string attachmentName = "")
+{
+    var mailMessage = new MimeMessage();
+    mailMessage.From.Add(new MailboxAddress("Ticket Flix Team", "abdeali.hazari@gmail.com"));
+    mailMessage.To.Add(new MailboxAddress("", toEmail));
+    mailMessage.Subject = subject;
+
+    var bodyBuilder = new BodyBuilder { HtmlBody = body };
+    if (attachment != null)
     {
-        var mailMessage = new MailMessage
-        {
-            Subject = subject,
-            Body = body,
-            From = new MailAddress("abdeali.hazari@gmail.com")  // Replace with your email
-        };
-        mailMessage.To.Add(new MailAddress(toEmail));
-
-        var mimeMessage = MimeMessage.CreateFromMailMessage(mailMessage);
-
-        var message = new Message
-        {
-            Raw = Base64UrlEncode(mimeMessage.ToString())
-        };
-
-        return message;
+        bodyBuilder.Attachments.Add(attachmentName, attachment);
     }
+    mailMessage.Body = bodyBuilder.ToMessageBody();
+
+    return new Message
+    {
+        Raw = Base64UrlEncode(mailMessage.ToString())
+    };
+}
+
 
     private static string Base64UrlEncode(string input)
     {

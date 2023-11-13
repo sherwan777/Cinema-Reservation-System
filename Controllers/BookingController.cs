@@ -3,6 +3,7 @@ using CinemaReservationSystemApi.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using MongoDB.Bson;
+using QRCoder;
 using System;
 
 namespace CinemaReservationSystemApi.Controllers
@@ -14,6 +15,7 @@ namespace CinemaReservationSystemApi.Controllers
         private readonly BookingService _bookingService;
         private readonly ILogger<BookingController> _logger;
         private readonly EmailService _emailService;
+        private dynamic qrCodeData;
 
         public BookingController(BookingService bookingService, EmailService emailService, ILogger<BookingController> logger)
         {
@@ -82,7 +84,7 @@ namespace CinemaReservationSystemApi.Controllers
 
         // POST: api/Booking
         [HttpPost]
-        public ActionResult<Booking> Create(Booking booking)
+        public ActionResult<object> Create(Booking booking)
         {
             _logger.LogInformation("Booking creation endpoint called.");
 
@@ -113,12 +115,17 @@ namespace CinemaReservationSystemApi.Controllers
                 var createdBooking = _bookingService.Create(booking);
                 _logger.LogInformation($"Booking created successfully. Booking ID: {createdBooking.Id}");
 
-                
-                //var userEmail = booking.userId;
+                // If user email is available, send the booking confirmation email
                 if (!string.IsNullOrWhiteSpace(userEmail))
                 {
+                    // Generate QR Code for the created booking
+                    var qrCodeData = _bookingService.GenerateQRCodeData(createdBooking);
+                    var qrCodeBytes = Convert.FromBase64String(qrCodeData);
+
+                    // Prepare email body without embedded QR code
                     var emailBody = CreateEmailBody(createdBooking, userEmail);
-                    _emailService.SendEmail(userEmail, "Your Ticket Confirmation", emailBody);
+                    // Send email with QR code as attachment
+                    _emailService.SendEmail(userEmail, "Your Ticket Confirmation", emailBody, qrCodeBytes, "YourBookingQRCode.png");
                     _logger.LogInformation("Attempted to send email for booking {BookingId}", createdBooking.Id);
                 }
                 else
@@ -126,7 +133,12 @@ namespace CinemaReservationSystemApi.Controllers
                     _logger.LogWarning("User email is missing for booking {BookingId}", createdBooking.Id);
                 }
 
-                return StatusCode(201, createdBooking);
+                // Return the created booking and the QR code data as part of the response
+                return StatusCode(201, new
+                {
+                    Booking = createdBooking,
+                    QRCodeImage = $"data:image/png;base64,{qrCodeData}"
+                });
             }
             catch (Exception ex)
             {
@@ -135,20 +147,26 @@ namespace CinemaReservationSystemApi.Controllers
             }
         }
 
-
         private string CreateEmailBody(Booking booking, string userEmail)
         {
-            return $"Dear User,\n\n" +
-                   $"Thank you for your booking.\n\n" +
-                   $"Movie Name: {booking.movieName}\n" +
-                   $"Date: {booking.movieDate}\n" +
-                   $"Time: {booking.movieTime}\n" +
-                   $"Total Price: {booking.TotalPrice}\n" +
-                   $"Seats: {string.Join(", ", booking.seatsBooked)}\n\n" +
-                   $"Please show this email to our representative at the cinema.\n\n" +
-                   $"Warm regards,\n" +
-                   $"TicketFlix Team";
+            return $@"
+                <html>
+                <body>
+                    <p>Dear User,</p>
+                    <p>Thank you for your booking.</p>
+                    <p><strong>Movie Name:</strong> {booking.movieName}<br>
+                       <strong>Date:</strong> {booking.movieDate}<br>
+                       <strong>Time:</strong> {booking.movieTime}<br>
+                       <strong>Total Price:</strong> {booking.TotalPrice}<br>
+                       <strong>Seats:</strong> {string.Join(", ", booking.seatsBooked)}
+                    </p>
+                    <p>Please show this email to our representative at the cinema.</p>
+                    <p>Warm regards,<br>
+                    TicketFlix Team</p>
+                </body>
+                </html>";
         }
+
 
 
         // DELETE: api/Booking/{BookingId}
