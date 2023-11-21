@@ -1,10 +1,13 @@
-﻿using System.Collections.Generic;
+﻿using MongoDB.Bson.Serialization.Attributes;
+using MongoDB.Bson;
+using System.Collections.Generic;
 
 namespace CinemaReservationSystemApi.Model
 {
     public class Movie
     {
-        public string id { get; set; }
+        [BsonId]
+        public ObjectId id { get; set; }
         public string movieName { get; set; }
         public string posterLink { get; set; }
         public string trailer { get; set; }
@@ -15,7 +18,7 @@ namespace CinemaReservationSystemApi.Model
         public string status { get; set; }
         public string Language { get; set; }
         public string ReleaseDate {  get; set; }
-        public Dictionary<string, List<string>> showTimings { get; set; }
+        public Dictionary<string, Dictionary<string, List<string>>> showTimings { get; set; }
         public List<string> cast { get; set; }
     }
 }

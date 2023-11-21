@@ -66,15 +66,35 @@ namespace CinemaReservationSystemApi.Services
             }
         }
 
-        public List<string> GetBookedSeats(string movieName, string movieDate, string movieTime)
+        public List<string> GetBookedSeats(string movieName, string cinemaName, string movieDate, string movieTime)
         {
             var bookings = _bookings.Find(b => b.movieName == movieName &&
+                                               b.cinemaName == cinemaName &&
                                                b.movieDate == movieDate &&
                                                b.movieTime == movieTime).ToList();
 
             // Extract all booked seats from the filtered bookings
-            return bookings.SelectMany(b => b.seatsBooked).ToList();
+            return bookings.SelectMany(b => b.seatsBooked ?? new List<string>()).ToList();
         }
+
+
+        public int GetTotalTicketSales(string cinemaName)
+        {
+            var currentDate = DateTime.UtcNow.Date; // Adjust for timezone if necessary
+            var bookings = _bookings.Find(b => b.cinemaName == cinemaName && b.movieDate == currentDate.ToString("yyyy-MM-dd")).ToList();
+            return bookings.Sum(b => b.seatsBooked?.Count ?? 0);
+        }
+
+
+        public Dictionary<string, int> GetSeatsBookedPerMovie(string cinemaName)
+        {
+            var currentDate = DateTime.UtcNow.Date; // Adjust for timezone if necessary
+            var bookings = _bookings.Find(b => b.cinemaName == cinemaName && b.movieDate == currentDate.ToString("yyyy-MM-dd")).ToList();
+            return bookings
+                .GroupBy(b => b.movieName)
+                .ToDictionary(g => g.Key, g => g.Sum(b => b.seatsBooked?.Count ?? 0));
+        }
+
 
         public Booking GetBookingById(ObjectId id) =>
      _bookings.Find<Booking>(booking => booking.Id == id).FirstOrDefault();
@@ -90,7 +110,7 @@ namespace CinemaReservationSystemApi.Services
                 {
                     using (var ms = new MemoryStream())
                     {
-                        qrBitmap.Save(ms, ImageFormat.Png);
+                        qrBitmap.Save(ms, format: ImageFormat.Png);
                         return Convert.ToBase64String(ms.ToArray());
                     }
                 }

@@ -142,6 +142,26 @@ namespace CinemaReservationSystemApi.Services
             _logger.LogInformation($"Movie with name: {movieName} successfully updated.");
         }
 
+        public void UpdateMovieShowTimings(string movieName, string cinemaName, string showDate, List<string> newTimings)
+        {
+            var movie = _movies.Find<Movie>(m => m.movieName == movieName).FirstOrDefault();
+            if (movie != null)
+            {
+                if (!movie.showTimings.ContainsKey(cinemaName))
+                {
+                    movie.showTimings[cinemaName] = new Dictionary<string, List<string>>();
+                }
+
+                movie.showTimings[cinemaName][showDate] = newTimings;
+                _movies.ReplaceOne(m => m.movieName == movieName, movie);
+            }
+            else
+            {
+                throw new KeyNotFoundException($"Movie with name: {movieName} not found.");
+            }
+        }
+
+
 
         // DELETE: api/Movies/{name}
         public void Remove(string name)

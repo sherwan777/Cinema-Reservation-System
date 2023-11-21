@@ -48,18 +48,18 @@ namespace CinemaReservationSystemApi.Controllers
 
 
         [HttpGet("bookedSeats")]
-        public ActionResult<object> GetBookedSeats(string movieName, string movieDate, string movieTime)
+        public ActionResult<object> GetBookedSeats(string movieName, string cinemaName, string movieDate, string movieTime)
         {
             try
             {
-                var bookedSeats = _bookingService.GetBookedSeats(movieName, movieDate, movieTime);
+                var bookedSeats = _bookingService.GetBookedSeats(movieName, cinemaName, movieDate, movieTime);
 
                 // Categorizing the booked seats based on their types
                 int bookedStandardSeats = bookedSeats.Count(s => s.StartsWith("Standard"));
                 int bookedSilverSeats = bookedSeats.Count(s => s.StartsWith("Silver"));
                 int bookedGoldSeats = bookedSeats.Count(s => s.StartsWith("Gold"));
 
-                int totalStandardSeats = 120;
+                int totalStandardSeats = 120; // Adjust these numbers as needed
                 int totalSilverSeats = 60;
                 int totalGoldSeats = 40;
 
@@ -78,6 +78,37 @@ namespace CinemaReservationSystemApi.Controllers
             {
                 _logger.LogError(e, "An error occurred while trying to retrieve booked seats.");
                 return StatusCode(500, new { Message = "An error occurred while trying to retrieve booked seats." });
+            }
+        }
+
+        [HttpGet("totalTicketSales/{cinemaName}")]
+        public ActionResult<int> GetTotalTicketSales(string cinemaName)
+        {
+            try
+            {
+                int totalTicketSales = _bookingService.GetTotalTicketSales(cinemaName);
+                return Ok(totalTicketSales);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "An error occurred while trying to retrieve total ticket sales.");
+                return StatusCode(500, new { Message = "An error occurred while trying to retrieve total ticket sales." });
+            }
+        }
+
+
+        [HttpGet("seatsBookedPerMovie/{cinemaName}")]
+        public ActionResult<Dictionary<string, int>> GetSeatsBookedPerMovie(string cinemaName)
+        {
+            try
+            {
+                var seatsBookedPerMovie = _bookingService.GetSeatsBookedPerMovie(cinemaName);
+                return Ok(seatsBookedPerMovie);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "An error occurred while trying to retrieve seats booked per movie.");
+                return StatusCode(500, new { Message = "An error occurred while trying to retrieve seats booked per movie." });
             }
         }
 
@@ -194,4 +225,3 @@ namespace CinemaReservationSystemApi.Controllers
 
     }
 }
-

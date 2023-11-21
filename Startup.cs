@@ -57,6 +57,7 @@ namespace CinemaReservationSystemApi
             services.AddSingleton<MovieService>();
             services.AddSingleton<UserService>();
             services.AddSingleton<BookingService>();
+            services.AddSingleton<CinemaService>();
             services.AddLogging(); 
             services.AddControllers();
         }

@@ -1,6 +1,5 @@
 ﻿using MongoDB.Bson;
-using System;
-using System.Collections.Generic;
+
 
 namespace CinemaReservationSystemApi.Model
 {
@@ -9,6 +8,7 @@ namespace CinemaReservationSystemApi.Model
         public ObjectId Id { get; set; }
         public string? userId { get; set; }
         public string? movieName { get; set; }
+        public string? cinemaName { get; set; }
         public string? movieDate { get; set; }
         public string? movieTime { get; set; }
         public int? NumOfTickets { get; set; }

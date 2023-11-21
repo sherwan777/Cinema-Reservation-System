@@ -3,6 +3,7 @@ using CinemaReservationSystemApi.Model;
 using MongoDB.Driver;
 using System;
 using BCrypt.Net;
+using MongoDB.Bson;
 
 namespace CinemaReservationSystemApi.Services
 {
@@ -19,7 +20,8 @@ namespace CinemaReservationSystemApi.Services
 
         public List<User> Get() => _users.Find(user => true).ToList();
 
-        public User GetUserById(string id) => _users.Find<User>(user => user.id == id).FirstOrDefault();
+        public User GetUserById(ObjectId id) => _users.Find<User>(user => user.id == id).FirstOrDefault();
+
 
         public User GetUserByEmailAndPassword(string email, string password)
         {
@@ -38,7 +40,8 @@ namespace CinemaReservationSystemApi.Services
             return user;
         }
 
-        public void Remove(string id) => _users.DeleteOne(user => user.id == id);
+        public void Remove(ObjectId id) => _users.DeleteOne(user => user.id == id);
+
     }
 
 }

@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using CinemaReservationSystemApi.Services;
 using CinemaReservationSystemApi.Model;
+using MongoDB.Bson;
 
 namespace CinemaReservationSystemApi.Controllers
 {
@@ -110,9 +111,27 @@ namespace CinemaReservationSystemApi.Controllers
             }
         }
 
+        [HttpPut("{movieName}/show-timings")]
+        public IActionResult UpdateShowTimings(string movieName, [FromBody] ShowTimingUpdateRequest request)
+        {
+            try
+            {
+                _movieService.UpdateMovieShowTimings(movieName, request.CinemaName, request.ShowDate, request.NewTimings);
+                return NoContent();
+            }
+            catch (KeyNotFoundException ex)
+            {
+                _logger.LogWarning(ex.Message);
+                return NotFound(new { Message = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"An error occurred while trying to update show timings for movie {movieName}");
+                return StatusCode(500, new { Message = $"An error occurred: {ex.Message}" });
+            }
+        }
 
-
-        // DELETE: api/Movies/{name}
+    // DELETE: api/Movies/{name}
         [HttpDelete("{name}")]
         public IActionResult Delete(string name)
         {

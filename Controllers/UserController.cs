@@ -5,6 +5,8 @@ using System.Security.Claims;
 using System.Text;
 using System.IdentityModel.Tokens.Jwt;
 using Microsoft.IdentityModel.Tokens;
+using MongoDB.Bson;
+using MongoDB.Bson.Serialization.Attributes;
 
 
 namespace CinemaReservationSystemApi.Controllers
@@ -26,10 +28,15 @@ namespace CinemaReservationSystemApi.Controllers
         public ActionResult<List<User>> Get() => _userService.Get();
 
         // GET: api/Users/{id}
-        [HttpGet("{id}", Name = "GetUser")]
-        public ActionResult<User> Get(string id)
+        [HttpGet("{id:length(24)}", Name = "GetUser")]
+        public ActionResult<User> GetUserbyId(string id)
         {
-            var user = _userService.GetUserById(id);
+            if (!ObjectId.TryParse(id, out var objectId))
+            {
+                return BadRequest("Invalid ID format");
+            }
+
+            var user = _userService.GetUserById(objectId);
 
             if (user == null)
             {
@@ -84,10 +91,6 @@ namespace CinemaReservationSystemApi.Controllers
             });
         }
 
-
-
-
-
         // POST: api/Users
         [HttpPost]
         public ActionResult<User> Create(User user)
@@ -113,9 +116,9 @@ namespace CinemaReservationSystemApi.Controllers
             {
                 Subject = new ClaimsIdentity(new Claim[]
                 {
-                    //new Claim(ClaimTypes.Name, createdUser.id.ToString()),
-                    new Claim(ClaimTypes.Name, createdUser.email.ToString()),
-                    new Claim(ClaimTypes.Role, createdUser.isAdmin ? "admin" : "user")
+             //new Claim(ClaimTypes.Name, createdUser.id.ToString()),
+             new Claim(ClaimTypes.Name, createdUser.email.ToString()),
+             new Claim(ClaimTypes.Role, createdUser.isAdmin ? "admin" : "user")
                 }),
                 Expires = DateTime.UtcNow.AddDays(1),
                 SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature)
@@ -131,21 +134,24 @@ namespace CinemaReservationSystemApi.Controllers
 
 
         // DELETE: api/Users/{id}
-        [HttpDelete("{id}")]
+        [HttpDelete("{id:length(24)}")]
         public IActionResult Delete(string id)
         {
-            var user = _userService.GetUserById(id);
+            if (!ObjectId.TryParse(id, out var objectId))
+            {
+                return BadRequest("Invalid ID format");
+            }
+
+            var user = _userService.GetUserById(objectId);
 
             if (user == null)
             {
                 return NotFound(new { Message = $"User with ID: {id} not found" });
             }
 
-            _userService.Remove(user.id);
+            _userService.Remove(objectId);
             return NoContent();
         }
-
- 
 
     }
 
