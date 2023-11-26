@@ -87,7 +87,7 @@ namespace CinemaReservationSystemApi.Controllers
                 Message = "Login successful",
                 Token = tokenString,
                 Role = user.isAdmin ? "admin" : "user",
-                UserId = user.id
+                UserId = user.id.ToString(),
             });
         }
 

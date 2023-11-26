@@ -32,6 +32,19 @@ namespace CinemaReservationSystemApi.Services
         public List<Booking> GetBookingsByUserId(string userId) =>
             _bookings.Find(booking => booking.userId == userId).ToList();
 
+        public Booking GetBookingById(string id)
+        {
+            try
+            {
+                var objectId = ObjectId.Parse(id);  // Convert string ID to ObjectId
+                return _bookings.Find(booking => booking.Id == objectId).FirstOrDefault();
+            }
+            catch (FormatException)
+            {
+                _logger.LogWarning($"Invalid format for ObjectId: {id}");
+                return null;
+            }
+        }
 
         public Booking Create(Booking booking)
         {
@@ -50,20 +63,33 @@ namespace CinemaReservationSystemApi.Services
             }
         }
 
-
-
-        public Booking GetBookingById(string id)
+        public string GenerateQRCodeData(Booking booking)
         {
-            try
+            var qrContent = CreateQRContent(booking); // Create the content for the QR code
+            _logger.LogInformation($"QR Code Content: {qrContent}");
+            var qrGenerator = new QRCodeGenerator();
+            var qrCodeData = qrGenerator.CreateQrCode(qrContent, QRCodeGenerator.ECCLevel.Q);
+
+            using (var qrCode = new QRCode(qrCodeData))
             {
-                var objectId = ObjectId.Parse(id);  // Convert string ID to ObjectId
-                return _bookings.Find(booking => booking.Id == objectId).FirstOrDefault();
+                using (var qrBitmap = qrCode.GetGraphic(20))
+                {
+                    using (var ms = new MemoryStream())
+                    {
+                        qrBitmap.Save(ms, ImageFormat.Png);
+                        var base64Data = Convert.ToBase64String(ms.ToArray());
+                        _logger.LogInformation($"Generated QR Code Base64 Length: {base64Data.Length}");
+                        return base64Data;
+                    }
+                }
             }
-            catch (FormatException)
-            {
-                _logger.LogWarning($"Invalid format for ObjectId: {id}");
-                return null;
-            }
+        }
+
+
+        private string CreateQRContent(Booking booking)
+        {
+            // Format the URL with the booking ID
+            return $"https://cinemareservationsystemapi.azurewebsites.net/api/Booking/single/{booking.Id}";
         }
 
         public List<string> GetBookedSeats(string movieName, string cinemaName, string movieDate, string movieTime)
@@ -94,34 +120,6 @@ namespace CinemaReservationSystemApi.Services
                 .GroupBy(b => b.movieName)
                 .ToDictionary(g => g.Key, g => g.Sum(b => b.seatsBooked?.Count ?? 0));
         }
-
-
-        public Booking GetBookingById(ObjectId id) =>
-     _bookings.Find<Booking>(booking => booking.Id == id).FirstOrDefault();
-
-        public string GenerateQRCodeData(Booking booking)
-        {
-            var qrContent = CreateQRContent(booking); // Create the content for the QR code
-            var qrGenerator = new QRCodeGenerator();
-            var qrCodeData = qrGenerator.CreateQrCode(qrContent, QRCodeGenerator.ECCLevel.Q);
-            using (var qrCode = new QRCode(qrCodeData))
-            {
-                using (var qrBitmap = qrCode.GetGraphic(20))
-                {
-                    using (var ms = new MemoryStream())
-                    {
-                        qrBitmap.Save(ms, format: ImageFormat.Png);
-                        return Convert.ToBase64String(ms.ToArray());
-                    }
-                }
-            }
-        }
-
-        private string CreateQRContent(Booking booking)
-        {
-            return booking.Id.ToString();
-        }
-
 
 
         public void Remove(ObjectId id)

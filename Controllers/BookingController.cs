@@ -3,6 +3,7 @@ using CinemaReservationSystemApi.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using MongoDB.Bson;
+using Newtonsoft.Json;
 using QRCoder;
 using System;
 
@@ -33,7 +34,7 @@ namespace CinemaReservationSystemApi.Controllers
         }
 
         // GET: api/Booking/{Userid}
-        [HttpGet("{userId}", Name = "GetBookingsByUserId")]
+        [HttpGet("user/{userId}", Name = "GetBookingsByUserId")]
         public ActionResult<List<Booking>> GetBookingsByUserId(string userId)
         {
             var bookings = _bookingService.GetBookingsByUserId(userId);
@@ -46,6 +47,21 @@ namespace CinemaReservationSystemApi.Controllers
             return bookings ?? new List<Booking>();  // Return empty list if bookings is null
         }
 
+        // GET: api/Booking/{id}
+        [HttpGet("{id}", Name = "GetBookingById")]
+        public ActionResult<Booking> GetBookingById(string id)
+        {
+            var booking = _bookingService.GetBookingById(id);
+
+            // If no booking is found, return an empty booking object with a 200 OK status.
+            if (booking == null)
+            {
+                _logger.LogInformation($"No booking found with id: {id}");
+                return Ok(new Booking());
+            }
+
+            return Ok(booking);
+        }
 
         [HttpGet("bookedSeats")]
         public ActionResult<object> GetBookedSeats(string movieName, string cinemaName, string movieDate, string movieTime)
@@ -55,9 +71,9 @@ namespace CinemaReservationSystemApi.Controllers
                 var bookedSeats = _bookingService.GetBookedSeats(movieName, cinemaName, movieDate, movieTime);
 
                 // Categorizing the booked seats based on their types
-                int bookedStandardSeats = bookedSeats.Count(s => s.StartsWith("Standard"));
-                int bookedSilverSeats = bookedSeats.Count(s => s.StartsWith("Silver"));
-                int bookedGoldSeats = bookedSeats.Count(s => s.StartsWith("Gold"));
+                int bookedStandardSeats = bookedSeats.Count(s => s.StartsWith("standard"));
+                int bookedSilverSeats = bookedSeats.Count(s => s.StartsWith("silver"));
+                int bookedGoldSeats = bookedSeats.Count(s => s.StartsWith("gold"));
 
                 int totalStandardSeats = 120; // Adjust these numbers as needed
                 int totalSilverSeats = 60;
@@ -146,12 +162,15 @@ namespace CinemaReservationSystemApi.Controllers
                 var createdBooking = _bookingService.Create(booking);
                 _logger.LogInformation($"Booking created successfully. Booking ID: {createdBooking.Id}");
 
+                // Generate QR Code for the created booking
+                var qrCodeData = _bookingService.GenerateQRCodeData(createdBooking);
+                _logger.LogInformation($"QR Code Data Length: {qrCodeData?.Length ?? 0}");
+
                 // If user email is available, send the booking confirmation email
                 if (!string.IsNullOrWhiteSpace(userEmail))
                 {
-                    // Generate QR Code for the created booking
-                    var qrCodeData = _bookingService.GenerateQRCodeData(createdBooking);
                     var qrCodeBytes = Convert.FromBase64String(qrCodeData);
+                    _logger.LogInformation($"QR Code Bytes Length: {qrCodeBytes.Length}");
 
                     // Prepare email body without embedded QR code
                     var emailBody = CreateEmailBody(createdBooking, userEmail);
@@ -164,12 +183,15 @@ namespace CinemaReservationSystemApi.Controllers
                     _logger.LogWarning("User email is missing for booking {BookingId}", createdBooking.Id);
                 }
 
-                // Return the created booking and the QR code data as part of the response
-                return StatusCode(201, new
+                // Construct the response object
+                var response = new
                 {
-                    Booking = createdBooking,
+                    BookingId = createdBooking.Id.ToString(),
                     QRCodeImage = $"data:image/png;base64,{qrCodeData}"
-                });
+                };
+
+                _logger.LogInformation($"Response: {JsonConvert.SerializeObject(response)}");
+                return StatusCode(201, response);
             }
             catch (Exception ex)
             {

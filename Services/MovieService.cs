@@ -133,14 +133,20 @@ namespace CinemaReservationSystemApi.Services
         // PUT: api/Movies/{name}
         public void UpdateByMovieName(string movieName, Movie movieIn)
         {
-            var result = _movies.ReplaceOne(movie => movie.movieName == movieName, movieIn);
-            if (result.MatchedCount == 0)
+            var existingMovie = _movies.Find<Movie>(m => m.movieName == movieName).FirstOrDefault();
+            if (existingMovie == null)
             {
                 _logger.LogWarning($"No movie found with name: {movieName}. Update operation aborted.");
                 throw new KeyNotFoundException($"No movie found with name: {movieName}");
             }
+
+            // Set the id of the incoming movie object to match the existing movie
+            movieIn.id = existingMovie.id;
+
+            _movies.ReplaceOne(movie => movie.id == movieIn.id, movieIn);
             _logger.LogInformation($"Movie with name: {movieName} successfully updated.");
         }
+
 
         public void UpdateMovieShowTimings(string movieName, string cinemaName, string showDate, List<string> newTimings)
         {

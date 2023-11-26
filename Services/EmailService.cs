@@ -5,7 +5,6 @@ using Google.Apis.Auth.OAuth2;
 using Google.Apis.Util.Store;
 using System.Text;
 using MimeKit;
-using System.Net.Mail;
 
 public class EmailService
 {
@@ -57,24 +56,24 @@ public class EmailService
     }
 
     private Message CreateEmailMessage(string toEmail, string subject, string body, byte[] attachment = null, string attachmentName = "")
-{
-    var mailMessage = new MimeMessage();
-    mailMessage.From.Add(new MailboxAddress("Ticket Flix Team", "abdeali.hazari@gmail.com"));
-    mailMessage.To.Add(new MailboxAddress("", toEmail));
-    mailMessage.Subject = subject;
-
-    var bodyBuilder = new BodyBuilder { HtmlBody = body };
-    if (attachment != null)
     {
-        bodyBuilder.Attachments.Add(attachmentName, attachment);
+        var mailMessage = new MimeMessage();
+        mailMessage.From.Add(new MailboxAddress("Ticket Flix Team", "abdeali.hazari@gmail.com"));
+        mailMessage.To.Add(new MailboxAddress("", toEmail));
+        mailMessage.Subject = subject;
+
+        var bodyBuilder = new BodyBuilder { HtmlBody = body };
+        if (attachment != null)
+        {
+            bodyBuilder.Attachments.Add(attachmentName, attachment);
+        }
+        mailMessage.Body = bodyBuilder.ToMessageBody();
+
+        return new Message
+        {
+            Raw = Base64UrlEncode(mailMessage.ToString())
+        };
     }
-    mailMessage.Body = bodyBuilder.ToMessageBody();
-
-    return new Message
-    {
-        Raw = Base64UrlEncode(mailMessage.ToString())
-    };
-}
 
 
     private static string Base64UrlEncode(string input)
