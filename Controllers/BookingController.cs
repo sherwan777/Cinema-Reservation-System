@@ -27,10 +27,21 @@ namespace CinemaReservationSystemApi.Controllers
 
         // GET: api/Booking
         [HttpGet]
-        public ActionResult<List<Booking>> GetAllBookings()
+        public ActionResult<IEnumerable<object>> GetAllBookings()
         {
             var bookings = _bookingService.GetAllBookings();
-            return bookings ?? new List<Booking>();  // Return empty list if bookings is null
+            if (bookings == null)
+            {
+                return new List<object>();
+            }
+
+            var result = bookings.Select(booking => new
+            {
+                Booking = booking,
+                BookingId = booking.Id.ToString()
+            });
+
+            return Ok(result);
         }
 
         // GET: api/Booking/{Userid}
@@ -44,7 +55,7 @@ namespace CinemaReservationSystemApi.Controllers
                 _logger.LogInformation($"No bookings found for user id: {userId}");
             }
 
-            return bookings ?? new List<Booking>();  // Return empty list if bookings is null
+            return bookings ?? new List<Booking>();
         }
 
         // GET: api/Booking/{id}
@@ -71,9 +82,9 @@ namespace CinemaReservationSystemApi.Controllers
                 var bookedSeats = _bookingService.GetBookedSeats(movieName, cinemaName, movieDate, movieTime);
 
                 // Categorizing the booked seats based on their types
-                int bookedStandardSeats = bookedSeats.Count(s => s.StartsWith("standard"));
-                int bookedSilverSeats = bookedSeats.Count(s => s.StartsWith("silver"));
-                int bookedGoldSeats = bookedSeats.Count(s => s.StartsWith("gold"));
+                int bookedStandardSeats = bookedSeats.Count(s => s.StartsWith("Standard"));
+                int bookedSilverSeats = bookedSeats.Count(s => s.StartsWith("Silver"));
+                int bookedGoldSeats = bookedSeats.Count(s => s.StartsWith("Gold"));
 
                 int totalStandardSeats = 120; // Adjust these numbers as needed
                 int totalSilverSeats = 60;

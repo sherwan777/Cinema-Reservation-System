@@ -1,7 +1,6 @@
 ﻿using CinemaReservationSystemApi.Model;
 using CinemaReservationSystemApi.Services;
 using Microsoft.AspNetCore.Mvc;
-using MongoDB.Bson;
 
 namespace CinemaReservationSystemApi.Controllers
 {
@@ -22,32 +21,59 @@ namespace CinemaReservationSystemApi.Controllers
         public ActionResult<List<Cinema>> Get()
         {
             var cinemas = _cinemaService.GetAll();
-            return Ok(cinemas);
+            if (cinemas == null) { return new List<Cinema>(); }
+
+            var response = cinemas.Select(cinema => new
+            {
+                Cinema = cinema,
+                BookingId = cinema.id.ToString()
+            });
+            return Ok(response);
         }
 
 
         [HttpGet("{name}")]
-        public ActionResult<Cinema> Get(string name)
+        public ActionResult<IEnumerable<Cinema>> Get(string name)
         {
             var cinema = _cinemaService.GetByName(name);
 
             if (cinema == null)
             {
-                return NotFound();
+                return Ok(new List<Cinema>());
             }
 
-            return cinema;
+            return Ok(new
+            {
+                CinemaId = cinema.id.ToString(),
+                Name = cinema.name,
+                Location = cinema.location
+            });
         }
+
 
         [HttpPost]
-        public ActionResult<Cinema> Create(Cinema cinema)
+        public ActionResult<object> Create(Cinema cinema)
         {
-            _logger.LogInformation("Attempting to create a new cinema.");
-            _cinemaService.Create(cinema);
-            _logger.LogInformation($"Cinema created with ID: {cinema.id}");
+            try
+            {
+                _logger.LogInformation("Attempting to create a new cinema.");
+                _cinemaService.Create(cinema);
+                _logger.LogInformation($"Cinema created with ID: {cinema.id}");
 
-            return CreatedAtAction(nameof(Get), new { id = cinema.id.ToString() }, cinema);
+                return CreatedAtAction(nameof(Get), new { id = cinema.id.ToString() }, new
+                {
+                    CinemaId = cinema.id.ToString(),
+                    Name = cinema.name,
+                    Location = cinema.location
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error creating cinema");
+                return StatusCode(500, new { Message = "An error occurred while creating the cinema." });
+            }
         }
+
 
         [HttpDelete("{name}")]
         public IActionResult Delete(string name)

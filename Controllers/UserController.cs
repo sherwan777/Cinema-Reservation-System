@@ -63,7 +63,7 @@ namespace CinemaReservationSystemApi.Controllers
             {
                 Subject = new ClaimsIdentity(new Claim[]
                 {
-                    new Claim(ClaimTypes.Name, user.email.ToString()),
+                    new Claim(ClaimTypes.Name, user.id.ToString()),
                     new Claim(ClaimTypes.Role, user.isAdmin ? "admin" : "user")
                 }),
                 Expires = DateTime.UtcNow.AddDays(1),
@@ -93,7 +93,7 @@ namespace CinemaReservationSystemApi.Controllers
 
         // POST: api/Users
         [HttpPost]
-        public ActionResult<User> Create(User user)
+        public ActionResult<object> Create(User user)
         {
             if (!ModelState.IsValid)
             {
@@ -116,9 +116,8 @@ namespace CinemaReservationSystemApi.Controllers
             {
                 Subject = new ClaimsIdentity(new Claim[]
                 {
-             //new Claim(ClaimTypes.Name, createdUser.id.ToString()),
-             new Claim(ClaimTypes.Name, createdUser.email.ToString()),
-             new Claim(ClaimTypes.Role, createdUser.isAdmin ? "admin" : "user")
+                    new Claim(ClaimTypes.Name, createdUser.id.ToString()),
+                    new Claim(ClaimTypes.Role, createdUser.isAdmin ? "admin" : "user")
                 }),
                 Expires = DateTime.UtcNow.AddDays(1),
                 SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature)
@@ -129,8 +128,15 @@ namespace CinemaReservationSystemApi.Controllers
             // Save token to cookies
             Response.Cookies.Append("jwt", tokenString, new CookieOptions { HttpOnly = true, Expires = DateTime.UtcNow.AddDays(1) });
 
-            return CreatedAtRoute("GetUser", new { id = createdUser.id.ToString() }, new { createdUser, Token = tokenString });
+            // Return the user ID, role, and success message
+            return CreatedAtRoute("GetUser", new { id = createdUser.id.ToString() }, new
+            {
+                UserId = createdUser.id.ToString(),
+                Role = createdUser.isAdmin ? "admin" : "user",
+                Message = "Registered successfully"
+            });
         }
+
 
 
         // DELETE: api/Users/{id}
