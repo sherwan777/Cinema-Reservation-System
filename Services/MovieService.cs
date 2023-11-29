@@ -13,6 +13,7 @@ namespace CinemaReservationSystemApi.Services
     public class MovieService
     {
         private readonly IMongoCollection<Movie> _movies;
+        private readonly IMongoCollection<Cinema> _cinemas;
         private readonly ILogger<MovieService> _logger;
 
         public MovieService(IMongoDbSettings settings, ILogger<MovieService> logger)
@@ -20,12 +21,63 @@ namespace CinemaReservationSystemApi.Services
             var client = new MongoClient(settings.ConnectionString);
             var database = client.GetDatabase(settings.DatabaseName);
             _movies = database.GetCollection<Movie>(settings.MoviesCollectionName);
+            _cinemas = database.GetCollection<Cinema>(settings.CinemasCollectionName);
             _logger = logger;
         }
+
+        /*private void ReplaceCinemaIdsWithNames(Movie movie)
+        {
+            var updatedShowTimings = new Dictionary<string, Dictionary<string, List<string>>>();
+
+            foreach (var cinemaIdAndShowtimes in movie.showTimings)
+            {
+                var cinemaId = cinemaIdAndShowtimes.Key;
+                // Assuming cinemaId is a string that can be used directly to compare with the string representation of ObjectId
+                var cinema = _cinemas.Find(c => c.id.ToString() == cinemaId).FirstOrDefault();
+                if (cinema != null)
+                {
+                    var showDateAndTimes = cinemaIdAndShowtimes.Value;
+                    var updatedShowDateAndTimes = new Dictionary<string, List<string>>();
+
+                    foreach (var showDateAndTime in showDateAndTimes)
+                    {
+                        updatedShowDateAndTimes.Add(showDateAndTime.Key, showDateAndTime.Value);
+                    }
+
+                    updatedShowTimings.Add(cinema.name, updatedShowDateAndTimes);
+                }
+            }
+
+            movie.showTimings = updatedShowTimings;
+        }*/
+
+
+        private void ReplaceCinemaIdsWithNames(Movie movie)
+        {
+            var updatedShowTimings = new Dictionary<string, Dictionary<string, List<string>>>();
+
+            foreach (var cinemaIdAndShowtimes in movie.showTimings)
+            {
+                var cinemaId = cinemaIdAndShowtimes.Key;
+                var cinema = _cinemas.Find(c => c.id.ToString() == cinemaId && !c.isDeleted).FirstOrDefault(); // Assuming you have an 'IsDeleted' flag in your cinema model
+
+                if (cinema != null)
+                {
+                    // If cinema is found and not deleted, replace cinema ID with cinema name
+                    var showDateAndTimes = cinemaIdAndShowtimes.Value;
+                    updatedShowTimings.Add(cinema.name, showDateAndTimes);
+                }
+                // If cinema is not found or it's deleted, we skip adding it to updatedShowTimings
+            }
+
+            movie.showTimings = updatedShowTimings;
+        }
+
 
         // GET: api/Movies
         public List<Movie> Get(string status)
         {
+            _logger.LogInformation("Retrieving movies with status: {Status}", status);
             try
             {
                 List<Movie> movies;
@@ -49,7 +101,13 @@ namespace CinemaReservationSystemApi.Services
                     movies = _movies.Find(movie => movie.status == status).ToList();
                 }
 
-                _logger.LogInformation($"{movies.Count} movies retrieved from the database.");
+                _logger.LogInformation("Replacing cinema IDs with names for all movies");
+                foreach (var movie in movies)
+                {
+                    ReplaceCinemaIdsWithNames(movie);
+                }
+
+                _logger.LogInformation("{Count} movies retrieved from the database.", movies.Count);
                 return movies;
             }
             catch (Exception ex)
@@ -69,16 +127,40 @@ namespace CinemaReservationSystemApi.Services
             var filter = Builders<Movie>.Filter.Regex(movie => movie.movieName, new BsonRegularExpression(name, "i"));
             var movies = _movies.Find(filter).ToList();
 
+
             if (movies.Count > 0)
             {
-                _logger.LogInformation($"{movies.Count} movies found containing name: {name}");
+                _logger.LogInformation("Replacing cinema IDs with names for movies containing name: {Name}", name);
+                foreach (var movie in movies)
+                {
+                    ReplaceCinemaIdsWithNames(movie);
+                }
             }
             else
             {
                 _logger.LogWarning($"No movies found containing name: {name}");
             }
-
             return movies;
+        }
+
+        // GET: api/Movies/{name}
+        public Movie GetExact(string name)
+        {
+            _logger.LogInformation($"Attempting to retrieve exact movie with name: {name}");
+
+            var movie = _movies.Find<Movie>(movie => movie.movieName.Equals(name, StringComparison.OrdinalIgnoreCase)).FirstOrDefault();
+
+            if (movie != null)
+            {
+                _logger.LogInformation("Movie found: {MovieName}", movie.movieName);
+                ReplaceCinemaIdsWithNames(movie);
+            }
+            else
+            {
+                _logger.LogWarning($"Movie with name: {name} not found.");
+            }
+
+            return movie;
         }
 
         // POST: api/Movies
@@ -110,25 +192,6 @@ namespace CinemaReservationSystemApi.Services
             }
         }
 
-
-        // GET: api/Movies/{name}
-        public Movie GetExact(string name)
-        {
-            _logger.LogInformation($"Attempting to retrieve exact movie with name: {name}");
-
-            var movie = _movies.Find<Movie>(movie => movie.movieName.Equals(name, StringComparison.OrdinalIgnoreCase)).FirstOrDefault();
-
-            if (movie != null)
-            {
-                _logger.LogInformation($"Movie found: {movie.movieName}");
-            }
-            else
-            {
-                _logger.LogWarning($"Movie with name: {name} not found.");
-            }
-
-            return movie;
-        }
 
         // PUT: api/Movies/{name}
         public void UpdateByMovieName(string movieName, Movie movieIn)

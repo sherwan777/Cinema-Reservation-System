@@ -24,7 +24,8 @@ namespace CinemaReservationSystemApi.Services
         {
             try
             {
-                return _cinemas.Find(cinema => true).ToList();
+                
+                return _cinemas.Find(cinema => !cinema.isDeleted).ToList();
             }
             catch (Exception ex)
             {
@@ -33,7 +34,19 @@ namespace CinemaReservationSystemApi.Services
             }
         }
 
-    
+        public Cinema GetByName(string name)
+        {
+            try
+            {
+                return _cinemas.Find(cinema => cinema.name == name && !cinema.isDeleted).FirstOrDefault();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"Error getting cinema with name: {name}");
+                throw;
+            }
+        }
+
 
         public Cinema Create(Cinema cinema)
         {
@@ -49,18 +62,7 @@ namespace CinemaReservationSystemApi.Services
             }
         }
 
-        public Cinema GetByName(string name)
-        {
-            try
-            {
-                return _cinemas.Find(cinema => cinema.name == name).FirstOrDefault();
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, $"Error getting cinema with name: {name}");
-                throw;
-            }
-        }
+        
 
 
         public void UpdateByName(string name, Cinema cinemaIn)
@@ -92,13 +94,18 @@ namespace CinemaReservationSystemApi.Services
         {
             try
             {
-                _cinemas.DeleteOne(cinema => cinema.name == name);
+                var filter = Builders<Cinema>.Filter.Eq(cinema => cinema.name, name);
+                var update = Builders<Cinema>.Update.Set(cinema => cinema.isDeleted, true);
+                _cinemas.UpdateOne(filter, update);
+
+                _logger.LogInformation($"Cinema with name: {name} marked as deleted.");
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, $"Error deleting cinema with name: {name}");
+                _logger.LogError(ex, $"Error marking cinema with name: {name} as deleted.");
                 throw;
             }
         }
+
     }
 }

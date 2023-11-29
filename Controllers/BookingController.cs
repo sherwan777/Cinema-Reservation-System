@@ -156,19 +156,25 @@ namespace CinemaReservationSystemApi.Controllers
             {
                 _logger.LogInformation("Attempting to extract user ID from HttpContext.");
 
-                // Extract user email from HttpContext.Items
+                // Extract user ID and email from HttpContext
+                var userId = HttpContext.Items["UserId"]?.ToString();
                 var userEmail = HttpContext.Items["UserEmail"]?.ToString();
+
+                _logger.LogInformation($"User ID extracted: {userId}");
                 _logger.LogInformation($"User email extracted: {userEmail}");
 
-                if (string.IsNullOrWhiteSpace(userEmail))
+                if (string.IsNullOrWhiteSpace(userId) || string.IsNullOrWhiteSpace(userEmail))
                 {
-                    _logger.LogWarning("User email is missing in the request context.");
-                    return Unauthorized(new { Message = "User email is required." });
+                    _logger.LogWarning("User ID or email is missing in the request context.");
+                    return Unauthorized(new { Message = "User ID and email are required." });
                 }
 
-                // Add the userID to the booking
-                booking.userId = userEmail;
-                _logger.LogInformation($"User ID set in booking: {userEmail}");
+                // Add the userID and userEmail to the booking
+                booking.userId = userId;
+                booking.userEmail = userEmail;
+
+                _logger.LogInformation($"User ID set in booking: {userId}");
+                _logger.LogInformation($"User Email set in booking: {userEmail}");
 
                 var createdBooking = _bookingService.Create(booking);
                 _logger.LogInformation($"Booking created successfully. Booking ID: {createdBooking.Id}");

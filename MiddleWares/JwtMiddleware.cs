@@ -1,4 +1,5 @@
 ﻿using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
 
 public class JwtMiddleware
 {
@@ -33,14 +34,21 @@ public class JwtMiddleware
 
             if (jwtToken != null)
             {
-                _logger.LogInformation($"JWT Token parsed successfully. Token: {jwtToken}");
+                var userIdClaim = jwtToken.Claims.FirstOrDefault(x => x.Type == "unique_name")?.Value;
+                var userEmailClaim = jwtToken.Claims.FirstOrDefault(x => x.Type == "email")?.Value;
 
-                // Change here: Use the "unique_name" claim to extract the user's email
-                var userEmailClaim = jwtToken.Claims.FirstOrDefault(x => x.Type == "unique_name");
-                if (userEmailClaim != null)
+                if (!string.IsNullOrWhiteSpace(userIdClaim))
                 {
-                    _logger.LogInformation($"User email extracted from token: {userEmailClaim.Value}");
-                    context.Items["UserEmail"] = userEmailClaim.Value;
+                    context.Items["UserId"] = userIdClaim;
+                }
+                else
+                {
+                    _logger.LogWarning("User ID claim not found in token.");
+                }
+
+                if (!string.IsNullOrWhiteSpace(userEmailClaim))
+                {
+                    context.Items["UserEmail"] = userEmailClaim;
                 }
                 else
                 {

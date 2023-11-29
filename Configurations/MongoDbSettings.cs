@@ -12,6 +12,7 @@ namespace CinemaReservationSystemApi.Configurations
         string BookingsCollectionName { get; set; }
         string UsersCollectionName { get; set; }
         string MoviesCollectionName { get; set; }
+        string CinemasCollectionName { get; set; }
     }
 
     public class MongoDbSettings : IMongoDbSettings
@@ -21,6 +22,7 @@ namespace CinemaReservationSystemApi.Configurations
         public string BookingsCollectionName { get; set; }
         public string UsersCollectionName { get; set; }
         public string MoviesCollectionName { get; set; }
+        public string CinemasCollectionName { get; set; }
 
     }
 

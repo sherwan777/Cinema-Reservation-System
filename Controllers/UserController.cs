@@ -64,6 +64,7 @@ namespace CinemaReservationSystemApi.Controllers
                 Subject = new ClaimsIdentity(new Claim[]
                 {
                     new Claim(ClaimTypes.Name, user.id.ToString()),
+                    new Claim(ClaimTypes.Email , user.email),
                     new Claim(ClaimTypes.Role, user.isAdmin ? "admin" : "user")
                 }),
                 Expires = DateTime.UtcNow.AddDays(1),
@@ -117,6 +118,7 @@ namespace CinemaReservationSystemApi.Controllers
                 Subject = new ClaimsIdentity(new Claim[]
                 {
                     new Claim(ClaimTypes.Name, createdUser.id.ToString()),
+                    new Claim(ClaimTypes.Email , user.email),
                     new Claim(ClaimTypes.Role, createdUser.isAdmin ? "admin" : "user")
                 }),
                 Expires = DateTime.UtcNow.AddDays(1),
@@ -136,8 +138,6 @@ namespace CinemaReservationSystemApi.Controllers
                 Message = "Registered successfully"
             });
         }
-
-
 
         // DELETE: api/Users/{id}
         [HttpDelete("{id:length(24)}")]

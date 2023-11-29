@@ -25,8 +25,10 @@ namespace CinemaReservationSystemApi.Controllers
 
             var response = cinemas.Select(cinema => new
             {
-                Cinema = cinema,
-                BookingId = cinema.id.ToString()
+                CinemaId = cinema.id.ToString(),
+                CinemaName = cinema.name,
+                CinemaLocation = cinema.location,
+                CinemaDeleted = cinema.isDeleted
             });
             return Ok(response);
         }
@@ -46,7 +48,8 @@ namespace CinemaReservationSystemApi.Controllers
             {
                 CinemaId = cinema.id.ToString(),
                 Name = cinema.name,
-                Location = cinema.location
+                Location = cinema.location,
+                deleted = cinema.isDeleted
             });
         }
 
@@ -64,7 +67,8 @@ namespace CinemaReservationSystemApi.Controllers
                 {
                     CinemaId = cinema.id.ToString(),
                     Name = cinema.name,
-                    Location = cinema.location
+                    Location = cinema.location,
+                    deleted = cinema.isDeleted
                 });
             }
             catch (Exception ex)
