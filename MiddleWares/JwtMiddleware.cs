@@ -34,7 +34,7 @@ public class JwtMiddleware
 
             if (jwtToken != null)
             {
-                var userIdClaim = jwtToken.Claims.FirstOrDefault(x => x.Type == "unique_name")?.Value;
+                var userIdClaim = jwtToken.Claims.FirstOrDefault(x => x.Type == "nameid")?.Value;
                 var userEmailClaim = jwtToken.Claims.FirstOrDefault(x => x.Type == "email")?.Value;
 
                 if (!string.IsNullOrWhiteSpace(userIdClaim))

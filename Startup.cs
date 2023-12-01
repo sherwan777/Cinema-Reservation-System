@@ -27,7 +27,7 @@ namespace CinemaReservationSystemApi
                     builder =>
                     {
                         builder
-                        .WithOrigins("http://localhost:3000" , "https://localhost:44305")  // Only allow requests from this origin
+                        .WithOrigins("http://localhost:3000" , "https://localhost:44305" , "https://master--chic-licorice-ebf14b.netlify.app")
                         .AllowCredentials()
                         .WithMethods("GET", "POST" , "PUT" , "DELETE")  // Only allow these methods
                         .WithHeaders("Content-Type", "Authorization");  // Only allow these headers

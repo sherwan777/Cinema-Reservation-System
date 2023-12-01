@@ -9,6 +9,7 @@ using MongoDB.Driver;
 using System.IO;
 using System;
 using QRCoder;
+using System.Text.RegularExpressions;
 
 namespace CinemaReservationSystemApi.Services
 {
@@ -88,8 +89,7 @@ namespace CinemaReservationSystemApi.Services
 
         private string CreateQRContent(Booking booking)
         {
-            // Format the URL with the booking ID
-            return $"https://cinemareservationsystemapi.azurewebsites.net/api/Booking/single/{booking.Id}";
+            return $"https://master--chic-licorice-ebf14b.netlify.app/bookings/{booking.Id}";
         }
 
         public List<string> GetBookedSeats(string movieName, string cinemaName, string movieDate, string movieTime)
@@ -104,12 +104,43 @@ namespace CinemaReservationSystemApi.Services
         }
 
 
-        public int GetTotalTicketSales(string cinemaName)
+        public IEnumerable<object> GetTicketSalesByDate(string cinemaName)
         {
-            var currentDate = DateTime.UtcNow.Date; // Adjust for timezone if necessary
-            var bookings = _bookings.Find(b => b.cinemaName == cinemaName && b.movieDate == currentDate.ToString("yyyy-MM-dd")).ToList();
-            return bookings.Sum(b => b.seatsBooked?.Count ?? 0);
+            _logger.LogInformation($"Attempting to retrieve ticket sales for cinema: {cinemaName}");
+
+            try
+            {
+                var filter = Builders<Booking>.Filter.Regex("cinemaName", new BsonRegularExpression("^" + Regex.Escape(cinemaName) + "$", "i"));
+
+                var bookingsGroupedByDate = _bookings.Aggregate()
+                    .Match(filter)
+                    .Group(b => b.movieDate, g => new
+                    {
+                        Date = g.Key,
+                        Sales = g.Sum(b => b.seatsBooked != null ? b.seatsBooked.Count : 0),
+                        TotalPrice = g.Sum(b => b.TotalPrice ?? 0)
+                    })
+                    .SortBy(g => g.Date)
+                    .ToList();
+
+                var ticketSalesData = bookingsGroupedByDate.Select(g => new
+                {
+                    g.Date,
+                    g.Sales,
+                    TotalRevenue = g.TotalPrice
+                });
+
+                _logger.LogInformation("Successfully retrieved ticket sales data for cinema: {CinemaName}", cinemaName);
+                return ticketSalesData;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "An error occurred while trying to retrieve ticket sales data for cinema: {CinemaName}", cinemaName);
+                throw;
+            }
         }
+
+
 
 
         public Dictionary<string, int> GetSeatsBookedPerMovie(string cinemaName)

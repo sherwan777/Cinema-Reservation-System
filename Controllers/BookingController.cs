@@ -109,19 +109,21 @@ namespace CinemaReservationSystemApi.Controllers
         }
 
         [HttpGet("totalTicketSales/{cinemaName}")]
-        public ActionResult<int> GetTotalTicketSales(string cinemaName)
+        public ActionResult<IEnumerable<object>> GetTotalTicketSales(string cinemaName)
         {
             try
             {
-                int totalTicketSales = _bookingService.GetTotalTicketSales(cinemaName);
-                return Ok(totalTicketSales);
+                var ticketSalesData = _bookingService.GetTicketSalesByDate(cinemaName);
+                return Ok(ticketSalesData);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "An error occurred while trying to retrieve total ticket sales.");
+                _logger.LogError(ex, "An error occurred while trying to retrieve total ticket sales for cinema: {CinemaName}", cinemaName);
                 return StatusCode(500, new { Message = "An error occurred while trying to retrieve total ticket sales." });
             }
         }
+
+
 
 
         [HttpGet("seatsBookedPerMovie/{cinemaName}")]

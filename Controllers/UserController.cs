@@ -16,11 +16,13 @@ namespace CinemaReservationSystemApi.Controllers
     public class UsersController : ControllerBase
     {
         private readonly UserService _userService;
+        private readonly ILogger<MoviesController> _logger;
         private readonly string secretKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJKaWduZXNoIFRyaXZlZGkiLCJlbWFpbCI6InRlc3QuYnRlc3RAZ21haWwuY29tIiwiRGF0ZU9mSm9pbmciOiIwMDAxLTAxLTAxIiwianRpIjoiYzJkNTZjNzQtZTc3Yy00ZmUxLTgyYzAtMzlhYjhmNzFmYzUzIiwiZXhwIjoxNTMyMzU2NjY5LCJpc3MiOiJUZXN0LmNvbSIsImF1ZCI6IlRlc3QuY29tIn0.8hwQ3H9V8mdNYrFZSjbCpWSyR1CNyDYHcGf6GqqCGnY";
        
-        public UsersController(UserService userService)
+        public UsersController(UserService userService , ILogger<MoviesController> logger)
         {
             _userService = userService;
+            _logger = logger;
         }
 
         // GET: api/Users
@@ -63,7 +65,8 @@ namespace CinemaReservationSystemApi.Controllers
             {
                 Subject = new ClaimsIdentity(new Claim[]
                 {
-                    new Claim(ClaimTypes.Name, user.id.ToString()),
+                    new Claim(ClaimTypes.NameIdentifier, user.id.ToString()),
+                    new Claim(ClaimTypes.Name , user.name),
                     new Claim(ClaimTypes.Email , user.email),
                     new Claim(ClaimTypes.Role, user.isAdmin ? "admin" : "user")
                 }),
@@ -87,6 +90,8 @@ namespace CinemaReservationSystemApi.Controllers
             {
                 Message = "Login successful",
                 Token = tokenString,
+                Name = user.name,
+                Email = user.email,
                 Role = user.isAdmin ? "admin" : "user",
                 UserId = user.id.ToString(),
             });
@@ -117,7 +122,8 @@ namespace CinemaReservationSystemApi.Controllers
             {
                 Subject = new ClaimsIdentity(new Claim[]
                 {
-                    new Claim(ClaimTypes.Name, createdUser.id.ToString()),
+                    new Claim(ClaimTypes.NameIdentifier, createdUser.id.ToString()),
+                    new Claim(ClaimTypes.Name , createdUser.name),
                     new Claim(ClaimTypes.Email , user.email),
                     new Claim(ClaimTypes.Role, createdUser.isAdmin ? "admin" : "user")
                 }),
@@ -134,10 +140,93 @@ namespace CinemaReservationSystemApi.Controllers
             return CreatedAtRoute("GetUser", new { id = createdUser.id.ToString() }, new
             {
                 UserId = createdUser.id.ToString(),
+                Name = createdUser.name,
+                Email = createdUser.email,
                 Role = createdUser.isAdmin ? "admin" : "user",
                 Message = "Registered successfully"
             });
         }
+
+        // GET: api/Users/IsLoggedIn
+        [HttpGet("IsLoggedIn")]
+        public ActionResult IsLoggedIn()
+        {
+            var token = HttpContext.Request.Cookies["token"];
+            if (string.IsNullOrEmpty(token))
+            {
+                _logger.LogWarning("Access attempt without a token.");
+                return Unauthorized(new { Message = "No token provided. Please log in." });
+            }
+
+            var tokenHandler = new JwtSecurityTokenHandler();
+            try
+            {
+                var principal = tokenHandler.ValidateToken(token, new TokenValidationParameters
+                {
+                    ValidateIssuerSigningKey = true,
+                    IssuerSigningKey = new SymmetricSecurityKey(Encoding.ASCII.GetBytes(secretKey)),
+                    ValidateIssuer = false,
+                    ValidateAudience = false,
+                    ClockSkew = TimeSpan.Zero
+                }, out SecurityToken validatedToken);
+
+                var jwtToken = (JwtSecurityToken)validatedToken;
+                var id = jwtToken.Claims.First(x => x.Type == "nameid").Value;
+                var name = jwtToken.Claims.First(x => x.Type == "unique_name").Value;
+                var email = jwtToken.Claims.First(x => x.Type == "email").Value;
+                var role = jwtToken.Claims.First(x => x.Type == "role").Value;
+
+                _logger.LogInformation("Token validated successfully for user: {Email}", email);
+
+                return Ok(new
+                {
+                    Message = "User is logged in.",
+                    Id = id,
+                    Name = name,
+                    Email = email,
+                    Role = role
+                });
+            }
+            catch (SecurityTokenException ste)
+            {
+                _logger.LogWarning(ste, "Security token exception occurred while validating the token.");
+                return Unauthorized(new { Message = "Invalid token. Please log in again." });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "An unexpected error occurred while validating the token.");
+                return StatusCode(StatusCodes.Status500InternalServerError, new { Message = "An error occurred. Please try again later." });
+            }
+        }
+
+        // POST: api/Users/logout
+        [HttpPost("logout")]
+        public IActionResult Logout()
+        {
+            try
+            {
+                // Clear the token cookie
+                var cookieOptions = new CookieOptions
+                {
+                    HttpOnly = true,
+                    SameSite = SameSiteMode.None,
+                    Secure = true,
+                    Path = "/",
+                    Expires = DateTime.UtcNow.AddDays(-1)
+                };
+                HttpContext.Response.Cookies.Append("token", "", cookieOptions);
+
+                _logger.LogInformation("User logged out successfully.");
+                return Ok(new { Message = "User logged out successfully." });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "An error occurred during the logout process.");
+                return StatusCode(StatusCodes.Status500InternalServerError, new { Message = "An error occurred during the logout process. Please try again later." });
+            }
+        }
+
+
 
         // DELETE: api/Users/{id}
         [HttpDelete("{id:length(24)}")]
