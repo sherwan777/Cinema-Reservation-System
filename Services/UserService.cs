@@ -22,6 +22,8 @@ namespace CinemaReservationSystemApi.Services
 
         public User GetUserById(ObjectId id) => _users.Find<User>(user => user.id == id).FirstOrDefault();
 
+        public User GetUserByEmail(string email) => _users.Find<User>(user => user.email == email).FirstOrDefault();
+
 
         public User GetUserByEmailAndPassword(string email, string password)
         {

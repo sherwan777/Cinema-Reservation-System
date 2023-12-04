@@ -247,7 +247,7 @@ namespace CinemaReservationSystemApi.Controllers
         {
             try
             {
-                var objectId = ObjectId.Parse(id);  // Convert string ID to ObjectId
+                var objectId = ObjectId.Parse(id);
                 _bookingService.Remove(objectId);
                 _logger.LogInformation($"Booking with id: {id} deleted successfully");
                 return NoContent();
