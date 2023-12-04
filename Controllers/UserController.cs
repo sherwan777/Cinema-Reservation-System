@@ -79,12 +79,13 @@ namespace CinemaReservationSystemApi.Controllers
             // Set the token in the cookie
             var cookieOptions = new CookieOptions
             {
-                HttpOnly = true,
+                //Domain = "chic-licorice-ebf14b.netlify.app",
+                HttpOnly = false,
                 SameSite = SameSiteMode.None,
                 Secure = true,
                 Path = "/"
             };
-            // HttpContext.Response.Cookies.Append("token", tokenString, cookieOptions);
+            HttpContext.Response.Cookies.Append("token", tokenString, cookieOptions);
 
             return Ok(new
             {
@@ -133,8 +134,14 @@ namespace CinemaReservationSystemApi.Controllers
             var token = tokenHandler.CreateToken(tokenDescriptor);
             var tokenString = tokenHandler.WriteToken(token);
 
-            // Save token to cookies
-            //Response.Cookies.Append("jwt", tokenString, new CookieOptions { HttpOnly = true, Expires = DateTime.UtcNow.AddDays(1) });
+            var cookieOptions = new CookieOptions
+            {
+                HttpOnly = true,
+                SameSite = SameSiteMode.None,
+                Secure = true,
+                Path = "/"
+            };
+            HttpContext.Response.Cookies.Append("token", tokenString, cookieOptions);
 
             // Return the user ID, role, and success message
             return CreatedAtRoute("GetUser", new { id = createdUser.id.ToString() }, new
@@ -196,6 +203,33 @@ namespace CinemaReservationSystemApi.Controllers
             {
                 _logger.LogError(ex, "An unexpected error occurred while validating the token.");
                 return StatusCode(StatusCodes.Status500InternalServerError, new { Message = "An error occurred. Please try again later." });
+            }
+        }
+
+        // POST: api/Users/logout
+        [HttpPost("logout")]
+        public IActionResult Logout()
+        {
+            try
+            {
+                // Clear the token cookie
+                var cookieOptions = new CookieOptions
+                {
+                    HttpOnly = true,
+                    SameSite = SameSiteMode.None,
+                    Secure = true,
+                    Path = "/",
+                    Expires = DateTime.UtcNow.AddDays(-1) // Set expiry date in the past to remove the cookie
+                };
+                HttpContext.Response.Cookies.Append("token", "", cookieOptions);
+
+                _logger.LogInformation("User logged out successfully.");
+                return Ok(new { Message = "User logged out successfully." });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "An error occurred during the logout process.");
+                return StatusCode(StatusCodes.Status500InternalServerError, new { Message = "An error occurred during the logout process. Please try again later." });
             }
         }
 

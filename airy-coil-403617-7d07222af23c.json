@@ -1,0 +1,13 @@
+{
+  "type": "service_account",
+  "project_id": "airy-coil-403617",
+  "private_key_id": "7d07222af23c772c5dc87fffaa9fe067543e14de",
+  "private_key": "-----BEGIN PRIVATE KEY-----\nMIIEvAIBADANBgkqhkiG9w0BAQEFAASCBKYwggSiAgEAAoIBAQClj21MfCs68YQs\nulv5DNn078F/rTt+JueW2dt/jn+rcjoBdcbTGWm6qBpeU3wFvDtA14nscwEUGpAl\nMGAXBkX3FGW9D+o/l+1/vSZKQ/jH3uG0ePc+a6O2ZVpytKp9dkjvOxXnK7pvtSZa\nWlLQtJmLpSanjx8YTqVqmfAx1Okk3XOtZuyjhN96VVZPOsw4Rf0zpNDkB/NnKhhV\nf7sdaXR0Zs2DvA8UrmDNLfGZbZ0KEiUfU9BWkJZjE1nM1le3UJBCINc49utQwFMa\n7KhER931jZV3lBdZ0GUWocyD3u5Y+Nblg+88tLJTAuGfWYnYGEXzLw2DZZ6u+p1L\nOh8+haNpAgMBAAECggEANaTiglzdWQz2idOch3b9jFq/NNJ5q2eJtJxEffE7Nt8d\nImn6EV5znrJnUNb2IZmbDWiJXR7qY4wz1oj1KaCzvNpUGM12VkKxBqnQJVIe4ww5\nz9M+MXCJLEls5Cvb7ikMes+HSk8l6pokojQQD2XlNpU9kB9UsPiSqpbUeCEHphTB\nrB46oPfAf4qOIG53lJJVuPALiDRnPyjS7btMqevT7HXv/z24fJeUltZAQKuCMZit\naI9zdtXO9IXBMbiLQHbv88s5rZQ5PIdUYOX/WEISxAYL+COxUtbn+vNrgMQ4ygos\nS2afk+1pRYH7ziEdGW8oF504mnhI1YaxOaCE9SPPTQKBgQDVqf7kRzSSu5IJTVaz\njSpxSLb672nVgvuDadMFP46VKhoqUpgzii+Dd9MsiP15y3kt+Jyk6KdnBRw24BRT\nVm25tFFzrBlD8v7aitpJO5XCNnNYwTYcjNRXtG15U5Su9yRymhqxsLUSVyIu52yr\n6ZWnwX4BWic9k6oC7wXXDux+OwKBgQDGXWPsvSnca36TddWU0PBiUpwX5YAwfH28\nzkfJ2iLMMNPfDsj8aardf0YRvROf+F0DVifmphxTyG59bqv97bqgtHhdt7yTVTat\nImXRIwg4lQ4PpXs4jhNrC4g21OmBywn/tUKN6ioqqPsGEb1/chHOwbc3oyB3PjWZ\n+4u2xpjWqwKBgAgIfCzZAIEDzFnNLpVRmWbo9Pg6SCBe7FXkhKqN2S6ChrlQoahO\nabrnpmjmPaF2pPe1gS4yERkueAEYK6t2dGmm/ej7b3e+ixZsYgie1OKYaX3MxdwM\n727cucD2A4EQia5FXPuRST2HSSG6Ubuk7JuCCtrCKPeHtbymf/G1/e5BAoGABqfl\njXD/cZTtx1bh1r94AWSSNj8OIRJcSbSGNiCqoD1XLpnZZpbJE+uMV1YHzYtQ26bN\nafDS7IDCLFVFUhzi8Td8/nAG1M68Ke0Ii47oXLWrphzAWLJztljJtkVInIFKkZjs\nZcSgq5PF8Hsx54/VRyG62xQPJ9EfjU4ibvyU7kcCgYAZoO27L1L9sV0AsrFdlOlM\n5vLQU9NbNYc32X7wz+gZB98JhpzY3E1RSqAr0hQo/KbpEcm+4NaasVGuBNBqeWDL\n+/8ccNbfjjnxkI6fIneOu2FNrTMnO5nzCv/c1+nYOwS2xCtyY7JGcWUe/QFJ8drT\nIUP93lCK9WHtjvqATRVuSw==\n-----END PRIVATE KEY-----\n",
+  "client_email": "emailapi@airy-coil-403617.iam.gserviceaccount.com",
+  "client_id": "102039785611878780700",
+  "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+  "token_uri": "https://oauth2.googleapis.com/token",
+  "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+  "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/emailapi%40airy-coil-403617.iam.gserviceaccount.com",
+  "universe_domain": "googleapis.com"
+}

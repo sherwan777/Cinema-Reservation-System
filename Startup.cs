@@ -27,10 +27,10 @@ namespace CinemaReservationSystemApi
                     builder =>
                     {
                         builder
-                        .WithOrigins("http://localhost:3000" , "https://localhost:44305" , "https://master--chic-licorice-ebf14b.netlify.app")
+                        .WithOrigins("http://localhost:3000" , "https://localhost:44305" , "https://chic-licorice-ebf14b.netlify.app")
                         .AllowCredentials()
-                        .WithMethods("GET", "POST" , "PUT" , "DELETE")  // Only allow these methods
-                        .WithHeaders("Content-Type", "Authorization");  // Only allow these headers
+                        .WithMethods("GET", "POST" , "PUT" , "DELETE")
+                        .WithHeaders("Content-Type", "Authorization");
                     });
             });
 

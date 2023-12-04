@@ -212,6 +212,11 @@ namespace CinemaReservationSystemApi.Controllers
                 _logger.LogInformation($"Response: {JsonConvert.SerializeObject(response)}");
                 return StatusCode(201, response);
             }
+            catch (InvalidOperationException ioe)
+            {
+                _logger.LogError(ioe, "Failed to create a booking due to a conflict: {Message}", ioe.Message);
+                return Conflict(new { Message = ioe.Message });
+            }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "An error occurred while trying to create a booking.");

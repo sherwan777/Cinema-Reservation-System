@@ -49,6 +49,22 @@ namespace CinemaReservationSystemApi.Services
 
         public Booking Create(Booking booking)
         {
+            // Check if any of the seats are already booked
+            var existingBookings = _bookings.Find(b =>
+                b.movieName == booking.movieName &&
+                b.cinemaName == booking.cinemaName &&
+                b.movieDate == booking.movieDate &&
+                b.movieTime == booking.movieTime).ToList();
+
+            foreach (var existingBooking in existingBookings)
+            {
+                // Check if there's an overlap in seats booked
+                if (existingBooking.seatsBooked.Intersect(booking.seatsBooked).Any())
+                {
+                    throw new InvalidOperationException("One or more seats are already booked.");
+                }
+            }
+
             try
             {
                 _bookings.InsertOne(booking);
@@ -63,6 +79,7 @@ namespace CinemaReservationSystemApi.Services
                 throw new InvalidOperationException("An error occurred while trying to create the booking.", e);
             }
         }
+
 
         public string GenerateQRCodeData(Booking booking)
         {
