@@ -79,7 +79,6 @@ namespace CinemaReservationSystemApi.Controllers
             // Set the token in the cookie
             var cookieOptions = new CookieOptions
             {
-                //Domain = "chic-licorice-ebf14b.netlify.app",
                 HttpOnly = false,
                 SameSite = SameSiteMode.None,
                 Secure = true,

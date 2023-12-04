@@ -1,5 +1,4 @@
 ﻿using System.IdentityModel.Tokens.Jwt;
-using System.Security.Claims;
 
 public class JwtMiddleware
 {
@@ -36,6 +35,7 @@ public class JwtMiddleware
             {
                 var userIdClaim = jwtToken.Claims.FirstOrDefault(x => x.Type == "nameid")?.Value;
                 var userEmailClaim = jwtToken.Claims.FirstOrDefault(x => x.Type == "email")?.Value;
+                var userNameClaim = jwtToken.Claims.FirstOrDefault(x => x.Type == "unique_name")?.Value;
 
                 if (!string.IsNullOrWhiteSpace(userIdClaim))
                 {
@@ -53,6 +53,14 @@ public class JwtMiddleware
                 else
                 {
                     _logger.LogWarning("User email claim not found in token.");
+                }
+                if (!string.IsNullOrWhiteSpace(userNameClaim))
+                {
+                    context.Items["UserName"] = userNameClaim;
+                }
+                else
+                {
+                    _logger.LogWarning("User Name claim not found in token.");
                 }
             }
             else

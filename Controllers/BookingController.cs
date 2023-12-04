@@ -161,22 +161,26 @@ namespace CinemaReservationSystemApi.Controllers
                 // Extract user ID and email from HttpContext
                 var userId = HttpContext.Items["UserId"]?.ToString();
                 var userEmail = HttpContext.Items["UserEmail"]?.ToString();
+                var userName = HttpContext.Items["UserName"]?.ToString();
 
                 _logger.LogInformation($"User ID extracted: {userId}");
                 _logger.LogInformation($"User email extracted: {userEmail}");
+                _logger.LogInformation($"User name extracted: {userName}");
 
-                if (string.IsNullOrWhiteSpace(userId) || string.IsNullOrWhiteSpace(userEmail))
+                if (string.IsNullOrWhiteSpace(userId) || string.IsNullOrWhiteSpace(userEmail) || string.IsNullOrWhiteSpace(userName))
                 {
-                    _logger.LogWarning("User ID or email is missing in the request context.");
-                    return Unauthorized(new { Message = "User ID and email are required." });
+                    _logger.LogWarning("User ID or email or name is missing in the request context.");
+                    return Unauthorized(new { Message = "User ID and email and name are required." });
                 }
 
                 // Add the userID and userEmail to the booking
                 booking.userId = userId;
                 booking.userEmail = userEmail;
+                booking.userName = userName;
 
                 _logger.LogInformation($"User ID set in booking: {userId}");
                 _logger.LogInformation($"User Email set in booking: {userEmail}");
+                _logger.LogInformation($"User Name set in booking: {userName}");
 
                 var createdBooking = _bookingService.Create(booking);
                 _logger.LogInformation($"Booking created successfully. Booking ID: {createdBooking.Id}");
@@ -191,11 +195,12 @@ namespace CinemaReservationSystemApi.Controllers
                     var qrCodeBytes = Convert.FromBase64String(qrCodeData);
                     _logger.LogInformation($"QR Code Bytes Length: {qrCodeBytes.Length}");
 
-                    // Prepare email body without embedded QR code
+                    // Prepare email body
                     var emailBody = CreateEmailBody(createdBooking, userEmail);
+
                     // Send email with QR code as attachment
                     _emailService.SendEmail(userEmail, "Your Ticket Confirmation", emailBody, qrCodeBytes, "YourBookingQRCode.png");
-                    _logger.LogInformation("Attempted to send email for booking {BookingId}", createdBooking.Id);
+                    _logger.LogInformation("Email sent successfully for booking {BookingId}", createdBooking.Id);
                 }
                 else
                 {
@@ -229,7 +234,7 @@ namespace CinemaReservationSystemApi.Controllers
             return $@"
                 <html>
                 <body>
-                    <p>Dear User,</p>
+                    <p>Dear {booking.userName},</p>
                     <p>Thank you for your booking.</p>
                     <p><strong>Movie Name:</strong> {booking.movieName}<br>
                        <strong>Date:</strong> {booking.movieDate}<br>

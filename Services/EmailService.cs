@@ -1,4 +1,4 @@
-﻿using Google.Apis.Gmail.v1;
+﻿/*using Google.Apis.Gmail.v1;
 using Google.Apis.Gmail.v1.Data;
 using Google.Apis.Services;
 using Google.Apis.Auth.OAuth2;
@@ -81,5 +81,62 @@ public class EmailService
         var inputBytes = Encoding.UTF8.GetBytes(input);
         return Convert.ToBase64String(inputBytes).Replace("+", "-").Replace("/", "_").Replace("=", "");
     }
+}*/
+
+using System.Net.Mail;
+using System.Net;
+
+public class EmailService
+{
+    private readonly ILogger<EmailService> _logger;
+
+    public EmailService(ILogger<EmailService> logger)
+    {
+        _logger = logger;
+    }
+
+    public void SendEmail(string toEmail, string subject, string body, byte[] attachment = null, string attachmentName = "")
+    {
+        try
+        {
+            var client = new SmtpClient("smtp.mailtrap.io", 2525)
+            {
+                Credentials = new NetworkCredential("0c11c80afdbf7e", "320cb1a4933ed0"),
+                EnableSsl = true
+            };
+
+            // Create a MailMessage object
+            var mailMessage = new MailMessage
+            {
+                From = new MailAddress("abdeali.hazari@gmail.com"),
+                Subject = subject,
+                Body = body,
+                IsBodyHtml = true // If your body contains HTML
+            };
+
+            mailMessage.To.Add(new MailAddress(toEmail));
+
+            // Check if there's an attachment
+            if (attachment != null && attachmentName != null)
+            {
+                // Do not use using here, as we do not want to dispose the stream yet
+                var stream = new MemoryStream(attachment);
+                mailMessage.Attachments.Add(new Attachment(stream, attachmentName, "image/png")); // Assuming the attachment is a PNG image
+            }
+
+            // Send the email
+            client.Send(mailMessage);
+
+            // Dispose of the mailMessage (and its attachments) manually
+            mailMessage.Dispose();
+
+            _logger.LogInformation("Email sent successfully to {Email}", toEmail);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error sending email to {Email}", toEmail);
+        }
+    }
+
+
 }
- 

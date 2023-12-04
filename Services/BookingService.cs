@@ -106,7 +106,7 @@ namespace CinemaReservationSystemApi.Services
 
         private string CreateQRContent(Booking booking)
         {
-            return $"https://master--chic-licorice-ebf14b.netlify.app/bookings/{booking.Id}";
+            return $"https://chic-licorice-ebf14b.netlify.app/admin/detail-booking/{booking.Id}";
         }
 
         public List<string> GetBookedSeats(string movieName, string cinemaName, string movieDate, string movieTime)

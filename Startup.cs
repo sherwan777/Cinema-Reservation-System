@@ -40,8 +40,16 @@ namespace CinemaReservationSystemApi
                 config.AddConsole();
             });
 
+            services.AddSingleton<IConfiguration>(provider => new ConfigurationBuilder()
+                .AddEnvironmentVariables()
+                .Build());
+
             services.Configure<MongoDbSettings>(
                Configuration.GetSection(nameof(MongoDbSettings)));
+
+            var smtpSettings = new SMTPSettings();
+            Configuration.GetSection("SMTP").Bind(smtpSettings);
+            services.AddSingleton(smtpSettings);
 
             services.AddSingleton<IMongoDbSettings>(sp =>
                 sp.GetRequiredService<IOptions<MongoDbSettings>>().Value);
