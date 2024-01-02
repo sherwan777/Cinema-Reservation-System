@@ -1,8 +1,6 @@
 ﻿using CinemaReservationSystemApi.Configurations;
 using CinemaReservationSystemApi.Model;
 using MongoDB.Driver;
-using System;
-using BCrypt.Net;
 using MongoDB.Bson;
 
 namespace CinemaReservationSystemApi.Services
@@ -11,9 +9,8 @@ namespace CinemaReservationSystemApi.Services
     {
         private readonly IMongoCollection<User> _users;
 
-        public UserService(IMongoDbSettings settings)
+        public UserService(MongoClient client,IMongoDbSettings settings)
         {
-            var client = new MongoClient(settings.ConnectionString);
             var database = client.GetDatabase(settings.DatabaseName);
             _users = database.GetCollection<User>(settings.UsersCollectionName);
         }

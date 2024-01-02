@@ -1,11 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using CinemaReservationSystemApi.Model;
+﻿using CinemaReservationSystemApi.Model;
 using MongoDB.Driver;
 using CinemaReservationSystemApi.Configurations;
-using Microsoft.Extensions.Logging;
 using MongoDB.Bson;
 
 namespace CinemaReservationSystemApi.Services
@@ -16,41 +11,13 @@ namespace CinemaReservationSystemApi.Services
         private readonly IMongoCollection<Cinema> _cinemas;
         private readonly ILogger<MovieService> _logger;
 
-        public MovieService(IMongoDbSettings settings, ILogger<MovieService> logger)
+        public MovieService(MongoClient client,IMongoDbSettings settings, ILogger<MovieService> logger)
         {
-            var client = new MongoClient(settings.ConnectionString);
             var database = client.GetDatabase(settings.DatabaseName);
             _movies = database.GetCollection<Movie>(settings.MoviesCollectionName);
             _cinemas = database.GetCollection<Cinema>(settings.CinemasCollectionName);
             _logger = logger;
         }
-
-        /*private void ReplaceCinemaIdsWithNames(Movie movie)
-        {
-            var updatedShowTimings = new Dictionary<string, Dictionary<string, List<string>>>();
-
-            foreach (var cinemaIdAndShowtimes in movie.showTimings)
-            {
-                var cinemaId = cinemaIdAndShowtimes.Key;
-                // Assuming cinemaId is a string that can be used directly to compare with the string representation of ObjectId
-                var cinema = _cinemas.Find(c => c.id.ToString() == cinemaId).FirstOrDefault();
-                if (cinema != null)
-                {
-                    var showDateAndTimes = cinemaIdAndShowtimes.Value;
-                    var updatedShowDateAndTimes = new Dictionary<string, List<string>>();
-
-                    foreach (var showDateAndTime in showDateAndTimes)
-                    {
-                        updatedShowDateAndTimes.Add(showDateAndTime.Key, showDateAndTime.Value);
-                    }
-
-                    updatedShowTimings.Add(cinema.name, updatedShowDateAndTimes);
-                }
-            }
-
-            movie.showTimings = updatedShowTimings;
-        }*/
-
 
         private void ReplaceCinemaIdsWithNames(Movie movie)
         {
@@ -59,7 +26,7 @@ namespace CinemaReservationSystemApi.Services
             foreach (var cinemaIdAndShowtimes in movie.showTimings)
             {
                 var cinemaId = cinemaIdAndShowtimes.Key;
-                var cinema = _cinemas.Find(c => c.id.ToString() == cinemaId && !c.isDeleted).FirstOrDefault(); // Assuming you have an 'IsDeleted' flag in your cinema model
+                var cinema = _cinemas.Find(c => c.id.ToString() == cinemaId && !c.isDeleted).FirstOrDefault();
 
                 if (cinema != null)
                 {

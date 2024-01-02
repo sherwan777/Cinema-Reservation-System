@@ -1,12 +1,8 @@
-using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Hosting;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.OpenApi.Models;
 using CinemaReservationSystemApi.Configurations;
 using CinemaReservationSystemApi.Services;
 using Microsoft.Extensions.Options;
-
+using MongoDB.Driver;
 
 namespace CinemaReservationSystemApi
 {
@@ -60,6 +56,9 @@ namespace CinemaReservationSystemApi
             {
                 c.SwaggerDoc("v1", new OpenApiInfo { Title = "CinemaReservationSystemApi", Version = "v1" });
             });
+
+            services.AddSingleton<MongoClient>(sp =>
+                new MongoClient(sp.GetRequiredService<IMongoDbSettings>().ConnectionString));
 
             services.AddSingleton<EmailService>();
             services.AddSingleton<MovieService>();

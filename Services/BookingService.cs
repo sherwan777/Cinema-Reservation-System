@@ -1,13 +1,8 @@
 ﻿using CinemaReservationSystemApi.Configurations;
 using CinemaReservationSystemApi.Model;
-using System.Drawing;
 using System.Drawing.Imaging;
-using System.IO;
-using Microsoft.Extensions.Logging;
 using MongoDB.Bson;
 using MongoDB.Driver;
-using System.IO;
-using System;
 using QRCoder;
 using System.Text.RegularExpressions;
 
@@ -19,9 +14,8 @@ namespace CinemaReservationSystemApi.Services
         private readonly IMongoCollection<User> _users;
         private readonly ILogger<BookingService> _logger;
 
-        public BookingService(IMongoDbSettings settings, ILogger<BookingService> logger)
+        public BookingService(MongoClient client,IMongoDbSettings settings, ILogger<BookingService> logger)
         {
-            var client = new MongoClient(settings.ConnectionString);
             var database = client.GetDatabase(settings.DatabaseName);
             _bookings = database.GetCollection<Booking>(settings.BookingsCollectionName);
             _users = database.GetCollection<User>(settings.UsersCollectionName);
@@ -103,7 +97,6 @@ namespace CinemaReservationSystemApi.Services
             }
         }
 
-
         private string CreateQRContent(Booking booking)
         {
             return $"https://chic-licorice-ebf14b.netlify.app/admin/detail-booking/{booking.Id}";
@@ -121,7 +114,7 @@ namespace CinemaReservationSystemApi.Services
         }
 
 
-        public IEnumerable<object> GetTicketSalesByDate(string cinemaName)
+        /*public IEnumerable<object> GetTicketSalesByDate(string cinemaName)
         {
             _logger.LogInformation($"Attempting to retrieve ticket sales for cinema: {cinemaName}");
 
@@ -155,19 +148,19 @@ namespace CinemaReservationSystemApi.Services
                 _logger.LogError(ex, "An error occurred while trying to retrieve ticket sales data for cinema: {CinemaName}", cinemaName);
                 throw;
             }
-        }
+        }*/
 
 
 
 
-        public Dictionary<string, int> GetSeatsBookedPerMovie(string cinemaName)
+        /*public Dictionary<string, int> GetSeatsBookedPerMovie(string cinemaName)
         {
             var currentDate = DateTime.UtcNow.Date; // Adjust for timezone if necessary
             var bookings = _bookings.Find(b => b.cinemaName == cinemaName && b.movieDate == currentDate.ToString("yyyy-MM-dd")).ToList();
             return bookings
                 .GroupBy(b => b.movieName)
                 .ToDictionary(g => g.Key, g => g.Sum(b => b.seatsBooked?.Count ?? 0));
-        }
+        }*/
 
 
         public void Remove(ObjectId id)
@@ -185,6 +178,5 @@ namespace CinemaReservationSystemApi.Services
                 _logger.LogInformation($"Booking with id: {id} successfully deleted");
             }
         }
-
     }
 }

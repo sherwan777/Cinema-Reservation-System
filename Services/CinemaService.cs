@@ -1,7 +1,5 @@
 ﻿using CinemaReservationSystemApi.Model;
 using MongoDB.Driver;
-using Microsoft.Extensions.Logging;
-using MongoDB.Bson;
 using CinemaReservationSystemApi.Configurations;
 
 namespace CinemaReservationSystemApi.Services
@@ -11,9 +9,8 @@ namespace CinemaReservationSystemApi.Services
         private readonly IMongoCollection<Cinema> _cinemas;
         private readonly ILogger<CinemaService> _logger;
 
-        public CinemaService(IMongoDbSettings settings, ILogger<CinemaService> logger)
+        public CinemaService(MongoClient client,IMongoDbSettings settings, ILogger<CinemaService> logger)
         {
-            var client = new MongoClient(settings.ConnectionString);
             var database = client.GetDatabase(settings.DatabaseName);
             _cinemas = database.GetCollection<Cinema>("Cinemas");
             _logger = logger;
@@ -24,7 +21,6 @@ namespace CinemaReservationSystemApi.Services
         {
             try
             {
-                
                 return _cinemas.Find(cinema => !cinema.isDeleted).ToList();
             }
             catch (Exception ex)

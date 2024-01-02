@@ -6,7 +6,6 @@ using System.Text;
 using System.IdentityModel.Tokens.Jwt;
 using Microsoft.IdentityModel.Tokens;
 using MongoDB.Bson;
-using MongoDB.Bson.Serialization.Attributes;
 
 
 namespace CinemaReservationSystemApi.Controllers

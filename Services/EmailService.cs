@@ -111,7 +111,7 @@ public class EmailService
                 From = new MailAddress("abdeali.hazari@gmail.com"),
                 Subject = subject,
                 Body = body,
-                IsBodyHtml = true // If your body contains HTML
+                IsBodyHtml = true
             };
 
             mailMessage.To.Add(new MailAddress(toEmail));
@@ -121,7 +121,7 @@ public class EmailService
             {
                 // Do not use using here, as we do not want to dispose the stream yet
                 var stream = new MemoryStream(attachment);
-                mailMessage.Attachments.Add(new Attachment(stream, attachmentName, "image/png")); // Assuming the attachment is a PNG image
+                mailMessage.Attachments.Add(new Attachment(stream, attachmentName, "image/png")); 
             }
 
             // Send the email

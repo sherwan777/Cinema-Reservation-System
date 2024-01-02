@@ -1,9 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using System;
-using System.Collections.Generic;
 using CinemaReservationSystemApi.Services;
 using CinemaReservationSystemApi.Model;
-using MongoDB.Bson;
 
 namespace CinemaReservationSystemApi.Controllers
 {
@@ -65,7 +62,7 @@ namespace CinemaReservationSystemApi.Controllers
         {
             if (!ModelState.IsValid)
             {
-                return BadRequest(ModelState);  // This will return detailed validation error messages
+                return BadRequest(ModelState);// This will return detailed validation error messages
             }
 
             try

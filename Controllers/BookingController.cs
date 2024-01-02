@@ -1,11 +1,8 @@
 ﻿using CinemaReservationSystemApi.Model;
 using CinemaReservationSystemApi.Services;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Logging;
 using MongoDB.Bson;
 using Newtonsoft.Json;
-using QRCoder;
-using System;
 
 namespace CinemaReservationSystemApi.Controllers
 {
@@ -86,7 +83,7 @@ namespace CinemaReservationSystemApi.Controllers
                 int bookedSilverSeats = bookedSeats.Count(s => s.StartsWith("Silver"));
                 int bookedGoldSeats = bookedSeats.Count(s => s.StartsWith("Gold"));
 
-                int totalStandardSeats = 120; // Adjust these numbers as needed
+                int totalStandardSeats = 120;
                 int totalSilverSeats = 60;
                 int totalGoldSeats = 40;
 
@@ -108,7 +105,7 @@ namespace CinemaReservationSystemApi.Controllers
             }
         }
 
-        [HttpGet("totalTicketSales/{cinemaName}")]
+        /*[HttpGet("totalTicketSales/{cinemaName}")]
         public ActionResult<IEnumerable<object>> GetTotalTicketSales(string cinemaName)
         {
             try
@@ -121,12 +118,12 @@ namespace CinemaReservationSystemApi.Controllers
                 _logger.LogError(ex, "An error occurred while trying to retrieve total ticket sales for cinema: {CinemaName}", cinemaName);
                 return StatusCode(500, new { Message = "An error occurred while trying to retrieve total ticket sales." });
             }
-        }
+        }*/
 
 
 
 
-        [HttpGet("seatsBookedPerMovie/{cinemaName}")]
+       /* [HttpGet("seatsBookedPerMovie/{cinemaName}")]
         public ActionResult<Dictionary<string, int>> GetSeatsBookedPerMovie(string cinemaName)
         {
             try
@@ -139,7 +136,7 @@ namespace CinemaReservationSystemApi.Controllers
                 _logger.LogError(ex, "An error occurred while trying to retrieve seats booked per movie.");
                 return StatusCode(500, new { Message = "An error occurred while trying to retrieve seats booked per movie." });
             }
-        }
+        }*/
 
 
         // POST: api/Booking
@@ -207,11 +204,10 @@ namespace CinemaReservationSystemApi.Controllers
                     _logger.LogWarning("User email is missing for booking {BookingId}", createdBooking.Id);
                 }
 
-                // Construct the response object
                 var response = new
                 {
                     BookingId = createdBooking.Id.ToString(),
-                    QRCodeImage = $"data:image/png;base64,{qrCodeData}"
+                    //QRCodeImage = $"data:image/png;base64,{qrCodeData}"
                 };
 
                 _logger.LogInformation($"Response: {JsonConvert.SerializeObject(response)}");
